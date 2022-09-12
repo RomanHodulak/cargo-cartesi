@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "cargo-cartesi",
+    "cartesi-rollups",
+    "cartesi-rollups-linux",
+    "cartesi-rollups-linux-test",
+    "cartesi-rollups-test",
+    "cartesi-rollups-evm-utils",
+]
