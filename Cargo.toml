@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "cargo-cartesi",
+    "cartesi-macros",
     "cartesi-rollups",
     "cartesi-rollups-linux",
     "cartesi-rollups-linux-test",
