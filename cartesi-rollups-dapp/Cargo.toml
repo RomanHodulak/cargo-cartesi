@@ -1,0 +1,9 @@
+[package]
+name = "cartesi-rollups-dapp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cartesi-rollups = { path = "../cartesi-rollups" }
+cartesi-rollups-http = { path = "../cartesi-rollups-http" }
+hyper = "0.14.20"

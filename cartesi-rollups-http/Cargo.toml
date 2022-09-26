@@ -1,0 +1,12 @@
+[package]
+name = "cartesi-rollups-http"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cartesi-rollups = { path = "../cartesi-rollups" }
+async-trait = "0.1"
+hyper = { version = "0.14" }
+log = { version = "0.4" }
+serde = { version = "1" }
+serde_json = { version = "1" }

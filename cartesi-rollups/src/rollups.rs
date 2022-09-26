@@ -1,13 +1,14 @@
+use async_trait::async_trait;
+use thiserror::Error;
 use crate::http::HttpRollups;
 
-pub trait Rollups {
-
+#[derive(Debug, Error)]
+pub enum RollupsError {
 }
 
-pub struct RollupsFactory;
+#[async_trait]
+pub trait Rollups {
+    async fn add_notice(&mut self, payload: &[u8]) -> Result<(), RollupsError>;
 
-impl RollupsFactory {
-    pub fn create() -> impl Rollups {
-        HttpRollups
-    }
+    async fn finish(&mut self) -> Result<(), RollupsError>;
 }

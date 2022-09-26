@@ -3,6 +3,8 @@ members = [
     "cargo-cartesi",
     "cartesi-macros",
     "cartesi-rollups",
+    "cartesi-rollups-dapp",
+    "cartesi-rollups-http",
     "cartesi-rollups-linux",
     "cartesi-rollups-linux-test",
     "cartesi-rollups-test",
