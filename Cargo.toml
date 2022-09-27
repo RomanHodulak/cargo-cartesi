@@ -9,4 +9,5 @@ members = [
     "cartesi-rollups-linux-test",
     "cartesi-rollups-test",
     "cartesi-rollups-evm-utils",
+    "stoopid",
 ]

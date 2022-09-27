@@ -1,6 +1,6 @@
+use std::error::Error;
 use async_trait::async_trait;
 use thiserror::Error;
-use crate::http::HttpRollups;
 
 #[derive(Debug, Error)]
 pub enum RollupsError {
@@ -8,7 +8,9 @@ pub enum RollupsError {
 
 #[async_trait]
 pub trait Rollups {
-    async fn add_notice(&mut self, payload: &[u8]) -> Result<(), RollupsError>;
+    async fn add_notice(&self, payload: &[u8]) -> Result<(), Box<dyn Error>>;
 
-    async fn finish(&mut self) -> Result<(), RollupsError>;
+    async fn add_report(&self, payload: &[u8]) -> Result<(), Box<dyn Error>>;
+
+    async fn run(&mut self) -> Result<(), RollupsError>;
 }

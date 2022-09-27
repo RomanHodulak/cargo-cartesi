@@ -7,3 +7,4 @@ edition = "2021"
 cartesi-rollups = { path = "../cartesi-rollups" }
 cartesi-rollups-http = { path = "../cartesi-rollups-http" }
 hyper = "0.14.20"
+thiserror = "1"
