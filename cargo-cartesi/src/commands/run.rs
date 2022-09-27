@@ -1,8 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum RunCommandError {
-}
+pub enum RunCommandError {}
 
 #[derive(Debug)]
 pub struct RunCommand;

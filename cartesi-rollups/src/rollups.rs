@@ -1,8 +1,8 @@
+use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::future::Future;
-use async_trait::async_trait;
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 /// Request sent from the rollups server.
 ///
@@ -37,8 +37,7 @@ pub struct RollupsMetadata {
 }
 
 #[derive(Debug, Error)]
-pub enum RollupsError {
-}
+pub enum RollupsError {}
 
 #[async_trait]
 pub trait Rollups {
@@ -51,10 +50,9 @@ pub trait Rollups {
         advance_state_handler: F1,
         inspect_state_handler: F2,
     ) -> Result<(), RollupsError>
-        where
-            F1: Fn(RollupsMessage) -> Fut1 + Send,
-            F2: Fn(RollupsMessage) -> Fut2 + Send,
-            Fut1: Future<Output = Result<bool, Box<dyn Error + 'static>>> + Send,
-            Fut2: Future<Output = Result<bool, Box<dyn Error + 'static>>> + Send,
-    ;
+    where
+        F1: Fn(RollupsMessage) -> Fut1 + Send,
+        F2: Fn(RollupsMessage) -> Fut2 + Send,
+        Fut1: Future<Output = Result<bool, Box<dyn Error + 'static>>> + Send,
+        Fut2: Future<Output = Result<bool, Box<dyn Error + 'static>>> + Send;
 }

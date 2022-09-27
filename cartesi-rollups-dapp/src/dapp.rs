@@ -1,6 +1,6 @@
-use std::env;
-use hyper::{Client, Uri};
 use cartesi_rollups_http::HttpRollups;
+use hyper::{Client, Uri};
+use std::env;
 use thiserror::Error;
 
 pub use cartesi_rollups::{Rollups, RollupsMessage};
@@ -12,7 +12,7 @@ pub enum RollupsBuilderError {
         param: String,
         env_var: String,
         method_name: String,
-    }
+    },
 }
 
 impl RollupsBuilderError {
@@ -34,7 +34,7 @@ impl RollupsBuilder {
         Self {
             server_address: env::var("ROLLUP_HTTP_SERVER_URL")
                 .ok()
-                .and_then(|v| v.try_into().ok())
+                .and_then(|v| v.try_into().ok()),
         }
     }
 
@@ -46,11 +46,12 @@ impl RollupsBuilder {
     pub fn build(self) -> Result<impl Rollups, RollupsBuilderError> {
         Ok(HttpRollups::new(
             Client::new(),
-            self.server_address.ok_or(RollupsBuilderError::missing_parameter(
-                "server_address",
-                "ROLLUP_HTTP_SERVER_URL",
-                "set_server_url"
-            ))?
+            self.server_address
+                .ok_or(RollupsBuilderError::missing_parameter(
+                    "server_address",
+                    "ROLLUP_HTTP_SERVER_URL",
+                    "set_server_url",
+                ))?,
         ))
     }
 }

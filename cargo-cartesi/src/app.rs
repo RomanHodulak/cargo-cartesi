@@ -1,6 +1,6 @@
-use std::process::{ExitCode, ExitStatus};
-use clap::{Parser, Subcommand};
 use crate::commands::Commands;
+use clap::{Parser, Subcommand};
+use std::process::{ExitCode, ExitStatus};
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]

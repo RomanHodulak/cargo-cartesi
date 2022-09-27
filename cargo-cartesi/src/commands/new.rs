@@ -4,8 +4,7 @@ use std::process::{Command, ExitCode, ExitStatus};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum NewCommandError {
-}
+pub enum NewCommandError {}
 
 #[derive(Debug, Args)]
 pub struct NewCommand {
@@ -28,6 +27,8 @@ impl NewCommand {
         io::stdout().write_all(&output.stdout).unwrap();
         io::stderr().write_all(&output.stderr).unwrap();
 
-        Ok(u8::try_from(output.status.code().unwrap_or_default()).unwrap_or_default().into())
+        Ok(u8::try_from(output.status.code().unwrap_or_default())
+            .unwrap_or_default()
+            .into())
     }
 }
