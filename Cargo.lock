@@ -86,6 +86,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "reqwest",
+ "serde",
  "thiserror",
 ]
 
@@ -836,6 +837,7 @@ version = "0.1.0"
 dependencies = [
  "cartesi-rollups-dapp",
  "env_logger",
+ "hyper",
  "tokio",
 ]
 

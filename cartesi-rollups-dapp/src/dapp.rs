@@ -3,7 +3,7 @@ use hyper::{Client, Uri};
 use cartesi_rollups_http::HttpRollups;
 use thiserror::Error;
 
-pub use cartesi_rollups::Rollups;
+pub use cartesi_rollups::{Rollups, RollupsMessage};
 
 #[derive(Debug, Error)]
 pub enum RollupsBuilderError {
@@ -38,7 +38,7 @@ impl RollupsBuilder {
         }
     }
 
-    pub fn set_server_url(&mut self, server_url: impl TryInto<Uri>) -> &mut Self {
+    pub fn set_server_url(mut self, server_url: impl TryInto<Uri>) -> Self {
         self.server_address = server_url.try_into().ok();
         self
     }

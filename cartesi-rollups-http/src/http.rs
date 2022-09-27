@@ -1,10 +1,10 @@
 use std::error::Error;
+use std::future::Future;
 use async_trait::async_trait;
-use cartesi_rollups::{Rollups, RollupsError};
+use cartesi_rollups::{RequestType, Rollups, RollupsError, RollupsMessage, RollupsRequest};
 use hyper::{body::{HttpBody, to_bytes}, header, Client, Request, Method, Body, Uri, StatusCode};
 use hyper::client::connect::Connect;
 use serde_json::json;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug)]
 pub struct HttpRollups<C> {
@@ -62,50 +62,12 @@ impl<C: Connect + Clone + Send + Sync + 'static> HttpRollups<C> {
             status_code => Err(format!("Unexpected status code {}", status_code))?,
         }
     }
-
-    async fn advance(&self, request: RollupsMessage) -> Result<bool, Box<dyn Error>> {
-        self.add_notice(request.payload.as_bytes()).await.map(|_| true)
-    }
-
-    async fn inspect(&self, request: RollupsMessage) -> Result<bool, Box<dyn Error>> {
-        self.add_report(request.payload.as_bytes()).await.map(|_| true)
-    }
-}
-
-/// Request sent from the rollups server.
-///
-/// For example, the rollups server received some inputs and now wants the dapp to advance state.
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RollupsRequest {
-    request_type: RequestType,
-    data: RollupsMessage,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum RequestType {
-    #[serde(rename = "advance_state")]
-    AdvanceState,
-    #[serde(rename = "inspect_state")]
-    InspectState,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RollupsMessage {
-    metadata: RollupsMetadata,
-    payload: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RollupsMetadata {
-    msg_sender: String,
-    epoch_index: u64,
-    input_index: u64,
-    block_number: u64,
-    timestamp: u64,
 }
 
 #[async_trait]
-impl<C: Connect + Clone + Send + Sync + 'static> Rollups for HttpRollups<C> {
+impl<C: Connect + Clone + Send + Sync + 'static> Rollups for HttpRollups<C>
+    where Self: Send
+{
     async fn add_notice(&self, payload: &[u8]) -> Result<(), Box<dyn Error>> {
         log::debug!("Adding notice");
 
@@ -140,7 +102,17 @@ impl<C: Connect + Clone + Send + Sync + 'static> Rollups for HttpRollups<C> {
         Ok(())
     }
 
-    async fn run(&mut self) -> Result<(), RollupsError> {
+    async fn run<F1, F2, Fut1, Fut2>(
+        &mut self,
+        advance_state_handler: F1,
+        inspect_state_handler: F2,
+    ) -> Result<(), RollupsError>
+        where
+            F1: Fn(RollupsMessage) -> Fut1 + Send,
+            F2: Fn(RollupsMessage) -> Fut2 + Send,
+            Fut1: Future<Output = Result<bool, Box<dyn Error>>> + Send,
+            Fut2: Future<Output = Result<bool, Box<dyn Error>>> + Send,
+    {
         let mut status = true;
 
         loop {
@@ -154,9 +126,19 @@ impl<C: Connect + Clone + Send + Sync + 'static> Rollups for HttpRollups<C> {
                     self.rollups_address = Some(request.data.metadata.msg_sender);
                 }
                 Some(request) => {
+                    log::debug!("Received rollups request {:?}", &request);
+
                     status = match request.request_type {
-                        RequestType::AdvanceState => self.advance(request.data).await.unwrap(),
-                        RequestType::InspectState => self.inspect(request.data).await.unwrap(),
+                        RequestType::AdvanceState => {
+                            let fut = advance_state_handler(request.data);
+
+                            fut.await.unwrap()
+                        },
+                        RequestType::InspectState => {
+                            let fut = inspect_state_handler(request.data);
+
+                            fut.await.unwrap()
+                        },
                     };
                 }
             }
