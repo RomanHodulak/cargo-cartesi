@@ -1,36 +1,24 @@
-#![feature(async_closure)]
+use cartesi_rollups_linux::{LinuxMachine, MachineIo, RollupsRequest};
 
-use cartesi_rollups_dapp::{Rollups, RollupsBuilder, RollupsMessage};
-use std::error::Error;
-
-#[tokio::main]
-async fn main() {
+fn main() {
     env_logger::init();
 
-    let mut rollups = RollupsBuilder::new()
-        .set_server_url("http://127.0.0.1:5004")
-        .build()
-        .unwrap();
+    let machine = LinuxMachine::open_default_device().unwrap();
 
-    let client = RollupsBuilder::new()
-        .set_server_url("http://127.0.0.1:5004")
-        .build()
-        .unwrap();
-    let client = &client;
+    run(machine);
+}
 
-    rollups
-        .run(
-            async move |request: RollupsMessage| -> Result<bool, Box<dyn Error>> {
-                client.add_notice(request.payload.as_bytes())
-                    .await
-                    .map(|_| true)
-            },
-            async move |request: RollupsMessage| -> Result<bool, Box<dyn Error>> {
-                client.add_report(request.payload.as_bytes())
-                    .await
-                    .map(|_| true)
-            },
-        )
-        .await
-        .unwrap();
+fn run(machine: impl MachineIo) {
+    loop {
+        let request = machine.submit().unwrap();
+
+        match request {
+            RollupsRequest::AdvanceState { payload, .. } => {
+                machine.write_notice(payload.as_slice()).unwrap();
+            }
+            RollupsRequest::InspectState { payload } => {
+                machine.write_report(payload.as_slice()).unwrap();
+            }
+        }
+    }
 }

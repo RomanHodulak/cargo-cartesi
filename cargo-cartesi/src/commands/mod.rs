@@ -17,9 +17,7 @@ pub enum Commands {
 impl Commands {
     pub fn run(&mut self) -> ExitCode {
         match self {
-            Commands::New(cmd) => {
-                NewCommand::handle(cmd.target_dir.as_ref().expect("hovno")).expect("unhandled")
-            }
+            Commands::New(cmd) => NewCommand::handle(cmd.target_dir.as_ref().expect("hovno")).expect("unhandled"),
         }
     }
 }

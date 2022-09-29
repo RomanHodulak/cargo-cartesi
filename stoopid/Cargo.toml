@@ -4,7 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-cartesi-rollups-dapp = { path = "../cartesi-rollups-dapp" }
-tokio = { version = "1.21", features = ["macros", "rt-multi-thread"] }
+cartesi-rollups-linux = { path = "../cartesi-rollups-linux" }
 env_logger = "0.9.1"
-hyper = "0.14.20"
