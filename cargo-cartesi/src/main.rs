@@ -1,9 +1,8 @@
-mod app;
+mod cli;
 mod commands;
 
-use app::Cli;
 use clap::Parser;
-use std::error::Error;
+use cli::Cli;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
