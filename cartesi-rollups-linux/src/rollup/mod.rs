@@ -10,6 +10,7 @@ pub use bindings::CARTESI_ROLLUP_ADVANCE_STATE;
 pub use bindings::CARTESI_ROLLUP_INSPECT_STATE;
 
 mod bindings;
+mod native_bindings;
 
 /// Rollup device driver path
 pub const ROLLUP_DEVICE_NAME: &str = "/dev/rollup";
