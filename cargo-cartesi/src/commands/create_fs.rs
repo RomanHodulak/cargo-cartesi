@@ -11,9 +11,9 @@ pub enum CreateFsCommandError {}
 pub struct CreateFsCommand;
 
 impl CreateFsCommand {
-    /// Creates a file-system for binary suitable for Cartesi machine.
+    /// Creates a file-system suitable to mount in Cartesi machine.
     ///
-    /// This command takes the `target_binary`, creates a file-system image of `fs_size` blocks and stores it in
+    /// This command takes the `files`, creates a file-system image of `fs_size` blocks and stores it in
     /// `output_fs`.
     pub fn handle(
         files: impl IntoIterator<Item = impl Into<PathBuf>>,
@@ -103,5 +103,20 @@ impl CreateFsCommand {
         io::stderr().write_all(&output.stderr).unwrap();
 
         String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    }
+
+    fn create_path(binary_name: &str) -> PathBuf {
+        let target_name = Self::target_name();
+        let path = PathBuf::new()
+            .join("target")
+            .join(target_name)
+            .join("release")
+            .join(binary_name);
+
+        path
+    }
+
+    fn target_name() -> &'static str {
+        "riscv64ima-cartesi-linux-gnu"
     }
 }

@@ -8,4 +8,5 @@ members = [
     "cartesi-rollups-test-doubles",
     "cartesi-rollups-evm-utils",
     "stoopid",
+    "one-shot",
 ]

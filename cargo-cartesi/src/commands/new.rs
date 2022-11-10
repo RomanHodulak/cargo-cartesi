@@ -4,14 +4,13 @@ use std::process::Command;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum CreateMachineCommandError {}
+pub enum NewCommandError {}
 
 #[derive(Debug)]
-pub struct CreateMachineCommand;
+pub struct NewCommand;
 
-impl CreateMachineCommand {
-    pub fn handle(target_binary: &str) -> Result<(), CreateMachineCommandError> {
-        let target_binary = "one-shot";
+impl NewCommand {
+    pub fn handle(target_binary: &str) -> Result<(), NewCommandError> {
         let machine_dir = "/opt/cartesi/share/dapp-bin";
         let ram_length = "128Mi";
         let dappfs = "dapp.ext2";

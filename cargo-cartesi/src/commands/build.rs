@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::process::Command;
 use std::{env, io};
+use std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -20,7 +21,7 @@ impl BuildCommand {
             .arg("--color")
             .arg("always")
             .arg("--target")
-            .arg("riscv64ima-cartesi-linux-gnu.json")
+            .arg(format!("{}.json", Self::target_name()))
             .arg("--release");
 
         let output = command.output().expect("failed to execute process");
@@ -29,5 +30,20 @@ impl BuildCommand {
         io::stderr().write_all(&output.stderr).unwrap();
 
         Ok(())
+    }
+
+    fn create_path(binary_name: &str) -> PathBuf {
+        let target_name = Self::target_name();
+        let path = PathBuf::new()
+            .join("target")
+            .join(target_name)
+            .join("release")
+            .join(binary_name);
+
+        path
+    }
+
+    fn target_name() -> &'static str {
+        "riscv64ima-cartesi-linux-gnu"
     }
 }

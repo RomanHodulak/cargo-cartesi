@@ -17,8 +17,14 @@ pub struct CreateMachineCommand {
 impl CreateMachineCommand {
     pub fn handle(self) -> Result<(), CreateMachineCommandError> {
         commands::BuildCommand::handle().unwrap();
-        commands::CreateFsCommand::handle(iter::once(self.target_bin), None, self.output_fs).unwrap();
-        commands::CreateMachineCommand::handle().unwrap();
+        commands::CreateFsCommand::handle(
+            iter::once(self.target_bin.as_str()),
+            None,
+            self.output_fs
+        ).unwrap();
+        commands::CreateMachineCommand::handle(
+            &self.target_bin
+        ).unwrap();
 
         Ok(())
     }
