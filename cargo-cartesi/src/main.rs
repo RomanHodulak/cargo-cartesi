@@ -1,5 +1,6 @@
 mod cli;
 mod commands;
+pub(crate) mod services;
 
 use clap::Parser;
 use cli::Cli;

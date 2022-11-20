@@ -1,6 +1,7 @@
-use crate::cli::{BuildCommand, CreateFsCommand, CreateMachineCommand, NewCommand};
+use crate::cli::{BuildCommand, CreateFsCommand, CreateMachineCommand, NewCommand, RunCommand};
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
+use clap::clap_derive::ArgEnum;
 
 #[derive(Subcommand)]
 pub enum Commands {
@@ -8,6 +9,7 @@ pub enum Commands {
     Build(BuildCommand),
     CreateFs(CreateFsCommand),
     CreateMachine(CreateMachineCommand),
+    Run(RunCommand),
 }
 
 impl Commands {
@@ -17,6 +19,7 @@ impl Commands {
             Commands::Build(cmd) => cmd.handle().expect("failed build"),
             Commands::CreateFs(cmd) => cmd.handle().expect("failed build"),
             Commands::CreateMachine(cmd) => cmd.handle().expect("failed build"),
+            Commands::Run(cmd) => cmd.handle().expect("failed build"),
         }
 
         ExitCode::SUCCESS
@@ -26,6 +29,8 @@ impl Commands {
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 pub struct Cli {
+    #[clap(short, long, arg_enum, default_value = "host")]
+    pub executor: Executor,
     #[clap(subcommand)]
     pub command: Option<Commands>,
 }
@@ -34,4 +39,10 @@ impl Cli {
     pub fn run(self) -> ExitCode {
         self.command.expect("no cmd").execute()
     }
+}
+
+#[derive(Debug, Clone, ArgEnum)]
+pub enum Executor {
+    Host,
+    Docker,
 }
