@@ -1,9 +1,5 @@
-use std::io;
-use std::io::Write;
-use std::path::Path;
-use std::process::Command;
+use crate::services::{CartesiMachine, DockerCartesiMachine, HostCartesiMachine};
 use thiserror::Error;
-use crate::services::HostCartesiMachine;
 
 #[derive(Debug, Error)]
 pub enum CreateMachineCommandError {}
@@ -12,14 +8,8 @@ pub enum CreateMachineCommandError {}
 pub struct CreateMachineCommand;
 
 impl CreateMachineCommand {
-    pub fn handle(target_binary: &str) -> Result<(), CreateMachineCommandError> {
-        let target_binary = Path::new(target_binary)
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap();
-
-        HostCartesiMachine::build(target_binary);
+    pub fn handle(target_binary: impl AsRef<str>, dapp_fs: impl AsRef<str>) -> Result<(), CreateMachineCommandError> {
+        DockerCartesiMachine.build(target_binary, dapp_fs);
 
         Ok(())
     }

@@ -1,9 +1,5 @@
-use std::io::Write;
-use std::process::Command;
-use std::{env, io};
-use std::path::PathBuf;
-use thiserror::Error;
 use crate::services::HostCargo;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum BuildCommandError {}

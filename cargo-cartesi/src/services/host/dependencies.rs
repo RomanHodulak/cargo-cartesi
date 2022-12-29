@@ -1,7 +1,5 @@
 struct HostDependencyDownloader;
 
 impl HostDependencyDownloader {
-    pub fn handle() {
-
-    }
+    pub fn handle() {}
 }

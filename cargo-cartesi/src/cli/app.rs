@@ -1,7 +1,7 @@
 use crate::cli::{BuildCommand, CreateFsCommand, CreateMachineCommand, NewCommand, RunCommand};
+use clap::clap_derive::ArgEnum;
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
-use clap::clap_derive::ArgEnum;
 
 #[derive(Subcommand)]
 pub enum Commands {

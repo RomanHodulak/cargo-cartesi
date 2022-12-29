@@ -1,7 +1,7 @@
 use std::io;
 use std::io::Write;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -31,20 +31,19 @@ impl CreateFsCommand {
             command.arg(&path);
         }
 
-        command.arg(&temp_dir);
-
-        let output = command.output().expect("failed to run process `rsync`");
-
-        io::stdout().write_all(&output.stdout).unwrap();
-        io::stderr().write_all(&output.stderr).unwrap();
+        command
+            .arg(&temp_dir)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .expect("failed to run process `rsync`");
 
         Self::tar(temp_dir, &tar);
 
         let size_in_blocks = fs_size.map(|v| v.to_string()).unwrap_or_else(|| "4096".to_owned());
         let output_fs = output_fs.into();
 
-        let mut command = Command::new("genext2fs");
-        command
+        Command::new("genext2fs")
             .arg("-f")
             .arg("-i")
             .arg("512")
@@ -52,36 +51,35 @@ impl CreateFsCommand {
             .arg(size_in_blocks)
             .arg("-a")
             .arg(tar)
-            .arg(&output_fs);
+            .arg(&output_fs)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .expect("failed to run process `genext2fs`");
 
-        let output = command.output().expect("failed to run process `genext2fs`");
-
-        io::stdout().write_all(&output.stdout).unwrap();
-        io::stderr().write_all(&output.stderr).unwrap();
-
-        let mut command = Command::new("truncate");
-        command.arg("-s").arg("%4096").arg(output_fs);
-
-        let output = command.output().expect("failed to run process `truncate`");
-
-        io::stdout().write_all(&output.stdout).unwrap();
-        io::stderr().write_all(&output.stderr).unwrap();
+        Command::new("truncate")
+            .arg("-s")
+            .arg("%4096")
+            .arg(output_fs)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .expect("failed to run process `truncate`");
 
         Ok(())
     }
 
     fn tar(input: impl Into<PathBuf>, output: impl Into<PathBuf>) {
-        let mut command = Command::new("tar");
-        command
+        Command::new("tar")
             .arg("-cf")
             .arg(output.into())
             .arg("-C")
             .arg(input.into())
-            .arg(".");
-        let output = command.output().expect("failed to execute process `tar`");
-
-        io::stdout().write_all(&output.stdout).unwrap();
-        io::stderr().write_all(&output.stderr).unwrap();
+            .arg(".")
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+            .expect("failed to execute process `tar`");
     }
 
     fn temp_dir() -> impl Into<PathBuf> {

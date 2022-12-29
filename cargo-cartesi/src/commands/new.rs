@@ -1,8 +1,8 @@
+use crate::services::HostCargo;
 use std::io;
 use std::io::Write;
 use std::process::Command;
 use thiserror::Error;
-use crate::services::HostCargo;
 
 #[derive(Debug, Error)]
 pub enum NewCommandError {}
