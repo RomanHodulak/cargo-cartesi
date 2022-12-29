@@ -2,6 +2,7 @@
 FROM cartesi/server-manager:0.4.0 as machine-server
 
 ARG BINARY
+ARG DAPP_FS
 WORKDIR /opt/cartesi/dapp
 
 # copy dapp ext2 from dapp stage

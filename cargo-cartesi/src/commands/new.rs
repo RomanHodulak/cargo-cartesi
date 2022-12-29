@@ -1,7 +1,4 @@
-use crate::services::HostCargo;
-use std::io;
-use std::io::Write;
-use std::process::Command;
+use crate::services::{Cargo, HostCargo};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -11,8 +8,8 @@ pub enum NewCommandError {}
 pub struct NewCommand;
 
 impl NewCommand {
-    pub fn handle(target_binary: &str) -> Result<(), NewCommandError> {
-        HostCargo::create_new_binary_source();
+    pub fn handle(_target_binary: &str) -> Result<(), NewCommandError> {
+        HostCargo.create_new_binary_source();
 
         Ok(())
     }

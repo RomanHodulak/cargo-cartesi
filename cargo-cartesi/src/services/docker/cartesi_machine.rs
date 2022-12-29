@@ -40,7 +40,7 @@ impl CartesiMachine for DockerCartesiMachine {
             .arg("--ram-image=dapp/linux-5.5.19-ctsi-6.bin")
             .arg("--rom-image=dapp/rom.bin")
             .arg("--")
-            .arg(format!("/mnt/dapp/{}", target_binary.as_ref()))
+            .arg(format!("cd /mnt/dapp; ./{}", target_binary.as_ref()))
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .output()

@@ -1,4 +1,4 @@
-use crate::services::HostCargo;
+use crate::services::Cargo;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,8 +8,8 @@ pub enum BuildCommandError {}
 pub struct BuildCommand;
 
 impl BuildCommand {
-    pub fn handle() -> Result<(), BuildCommandError> {
-        HostCargo::build_binary();
+    pub fn handle(cargo: &impl Cargo) -> Result<(), BuildCommandError> {
+        cargo.build_binary();
 
         Ok(())
     }

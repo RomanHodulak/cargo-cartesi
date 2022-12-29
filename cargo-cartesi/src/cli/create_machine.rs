@@ -1,8 +1,6 @@
 use crate::commands;
-use crate::services::HostCargo;
+use crate::services::{DockerCartesiMachine, HostCargo, HostFileSystem};
 use clap::Args;
-use std::iter;
-use std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -18,13 +16,12 @@ pub struct CreateMachineCommand {
 
 impl CreateMachineCommand {
     pub fn handle(self) -> Result<(), CreateMachineCommandError> {
-        commands::BuildCommand::handle().unwrap();
+        let cargo = HostCargo;
+        let file_system = HostFileSystem;
+        let cartesi_machine = DockerCartesiMachine;
 
-        let target_bin = self.target_bin.unwrap_or(HostCargo::package_name().unwrap());
-        let target_dir = PathBuf::from(HostCargo::target_dir().unwrap()).join(&target_bin);
-        commands::CreateFsCommand::handle(iter::once(target_dir), None, &self.output_fs).unwrap();
-
-        commands::CreateMachineCommand::handle(target_bin, self.output_fs).unwrap();
+        commands::CreateMachineCommand::handle(self.target_bin, self.output_fs, &cargo, &file_system, &cartesi_machine)
+            .unwrap();
 
         Ok(())
     }
