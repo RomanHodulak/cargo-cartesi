@@ -10,9 +10,12 @@ use std::process::Stdio;
 pub struct HostCargo;
 
 impl Cargo for HostCargo {
-    fn create_new_binary_source(&self) {
+    fn create_new_binary_source(&self, target_bin: impl AsRef<str>) {
         Self::cargo()
             .arg("new")
+            .arg("--color")
+            .arg("always")
+            .arg(target_bin.as_ref())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .output()
