@@ -55,9 +55,23 @@ impl Cargo for HostCargo {
     }
 
     fn target_dir(&self) -> Result<String, Box<dyn Error>> {
-        Ok(PathBuf::new()
-            .join(env::current_dir()?)
-            .join("../target")
+        let mut path = PathBuf::new().join(env::current_dir()?);
+
+        while path.exists() {
+            let target = path.join("target");
+
+            if target.exists() {
+                path = target;
+                break;
+            }
+
+            path = path.join("..");
+        }
+        if !path.exists() {
+            return Err(Box::try_from("Target not found.").unwrap());
+        }
+
+        Ok(path
             .join(Self::target_name())
             .join("release")
             .canonicalize()?
