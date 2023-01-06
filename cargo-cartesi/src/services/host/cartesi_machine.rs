@@ -21,6 +21,8 @@ impl CartesiMachine for HostCartesiMachine {
             .arg(format!("--store={}", machine_dir))
             .arg("--")
             .arg(format!("cd /mnt/dapp; ./{}", target_binary.as_ref()))
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
             .output()
             .expect("failed to run process `cartesi-machine`");
     }
