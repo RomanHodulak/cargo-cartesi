@@ -1,5 +1,5 @@
 use crate::commands;
-use crate::services::{DockerCartesiMachine, HostCargo, HostFileSystem};
+use crate::services::{Cargo, CartesiMachine, FileSystem};
 use clap::Args;
 use thiserror::Error;
 
@@ -15,11 +15,12 @@ pub struct CreateMachineCommand {
 }
 
 impl CreateMachineCommand {
-    pub fn handle(self) -> Result<(), CreateMachineCommandError> {
-        let cargo = HostCargo;
-        let file_system = HostFileSystem;
-        let cartesi_machine = DockerCartesiMachine;
-
+    pub fn handle(
+        self,
+        cargo: impl Cargo,
+        file_system: impl FileSystem,
+        cartesi_machine: impl CartesiMachine,
+    ) -> Result<(), CreateMachineCommandError> {
         commands::CreateMachineCommand::handle(self.target_bin, self.output_fs, &cargo, &file_system, &cartesi_machine)
             .unwrap();
 

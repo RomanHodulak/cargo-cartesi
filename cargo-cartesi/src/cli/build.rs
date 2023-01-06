@@ -1,5 +1,5 @@
 use crate::commands;
-use crate::services::HostCargo;
+use crate::services::Cargo;
 use clap::Args;
 use thiserror::Error;
 
@@ -10,9 +10,7 @@ pub enum BuildCommandError {}
 pub struct BuildCommand;
 
 impl BuildCommand {
-    pub fn handle(&self) -> Result<(), BuildCommandError> {
-        let cargo = HostCargo;
-
+    pub fn handle(&self, cargo: impl Cargo) -> Result<(), BuildCommandError> {
         commands::BuildCommand::handle(&cargo).unwrap();
 
         Ok(())

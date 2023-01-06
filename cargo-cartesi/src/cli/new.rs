@@ -1,5 +1,5 @@
 use crate::commands;
-use crate::services::{HostCargo, HostDependencyDownloader, HostResourceCreator};
+use crate::services::{Cargo, DependenciesDownloader, ResourceCreator};
 use clap::Args;
 use thiserror::Error;
 
@@ -13,11 +13,12 @@ pub struct NewCommand {
 }
 
 impl NewCommand {
-    pub fn handle(self) -> Result<(), NewCommandError> {
-        let cargo = HostCargo;
-        let deps = HostDependencyDownloader;
-        let res = HostResourceCreator;
-
+    pub fn handle(
+        self,
+        cargo: impl Cargo,
+        deps: impl DependenciesDownloader,
+        res: impl ResourceCreator,
+    ) -> Result<(), NewCommandError> {
         commands::NewCommand::handle(self.target_dir, &deps, &res, &cargo).unwrap();
 
         Ok(())
