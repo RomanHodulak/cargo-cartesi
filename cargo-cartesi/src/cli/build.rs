@@ -1,12 +1,13 @@
 use crate::commands;
 use crate::services::Cargo;
 use clap::Args;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum BuildCommandError {}
 
-#[derive(Debug, Args)]
+#[derive(Debug, Args, Serialize, Deserialize)]
 pub struct BuildCommand;
 
 impl BuildCommand {

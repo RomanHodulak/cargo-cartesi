@@ -11,3 +11,4 @@ cargo_metadata = "0.15"
 toml = "0.5"
 sha1 = "0.10"
 hex-literal = "0.3"
+figment = { version = "0.10", features = ["toml", "env"] }

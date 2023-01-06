@@ -1,12 +1,13 @@
 use crate::commands;
 use crate::services::{Cargo, DependenciesDownloader, ResourceCreator};
 use clap::Args;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum NewCommandError {}
 
-#[derive(Debug, Args)]
+#[derive(Debug, Args, Serialize, Deserialize)]
 pub struct NewCommand {
     #[clap(value_parser)]
     target_dir: String,

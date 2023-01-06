@@ -5,9 +5,10 @@ use crate::services::{
 };
 use clap::clap_derive::ArgEnum;
 use clap::{Parser, Subcommand};
+use serde::{Deserialize, Serialize};
 use std::process::ExitCode;
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, Serialize, Deserialize)]
 pub enum Commands {
     New(NewCommand),
     Build(BuildCommand),
@@ -50,8 +51,7 @@ impl Commands {
     }
 }
 
-#[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
+#[derive(Parser, Debug, Serialize, Deserialize)]
 pub struct Cli {
     #[clap(short, long, arg_enum, default_value = "host")]
     pub executor: Executor,
@@ -70,7 +70,7 @@ impl Cli {
     }
 }
 
-#[derive(Debug, Clone, ArgEnum)]
+#[derive(Debug, Clone, ArgEnum, Serialize, Deserialize)]
 pub enum Executor {
     Host,
     Docker,

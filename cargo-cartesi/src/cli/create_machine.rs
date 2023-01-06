@@ -1,12 +1,13 @@
 use crate::commands;
 use crate::services::{Cargo, CartesiMachine, FileSystem};
 use clap::Args;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum CreateMachineCommandError {}
 
-#[derive(Debug, Args)]
+#[derive(Debug, Args, Serialize, Deserialize)]
 pub struct CreateMachineCommand {
     #[clap(value_parser)]
     target_bin: Option<String>,
