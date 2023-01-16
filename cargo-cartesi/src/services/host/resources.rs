@@ -18,11 +18,8 @@ impl ResourceCreator for HostResourceCreator {
 }
 
 impl HostResourceCreator {
-    const RESOURCES: [(&'static [u8], &'static str); 2] = [
-        (include_bytes!("../../../res/Dockerfile"), "Dockerfile"),
-        (
-            include_bytes!("../../../res/riscv64ima-cartesi-linux-gnu.json"),
-            "riscv64ima-cartesi-linux-gnu.json",
-        ),
-    ];
+    const RESOURCES: [(&'static [u8], &'static str); 1] = [(
+        include_bytes!("../../../res/riscv64ima-cartesi-linux-gnu.json"),
+        "riscv64ima-cartesi-linux-gnu.json",
+    )];
 }

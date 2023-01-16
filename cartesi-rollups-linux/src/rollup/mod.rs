@@ -10,7 +10,6 @@ pub use bindings::CARTESI_ROLLUP_ADVANCE_STATE;
 pub use bindings::CARTESI_ROLLUP_INSPECT_STATE;
 
 mod bindings;
-mod native_bindings;
 
 /// Rollup device driver path
 pub const ROLLUP_DEVICE_NAME: &str = "/dev/rollup";
@@ -150,26 +149,13 @@ pub struct Exception {
 pub fn finish_request(fd: RawFd, finish: &mut RollupFinish, accept: bool) -> Result<(), Box<dyn std::error::Error>> {
     log::debug!("writing rollup finish request, yielding");
 
-    let mut finish_c = Box::new(bindings::rollup_finish::from(&mut *finish));
-    let res = unsafe { bindings::rollup_finish_request(fd as i32, finish_c.as_mut(), accept) };
+    let finish_c = bindings::rollup_finish_request(fd as i32, accept)?;
 
-    match res {
-        0 => {
-            *finish = RollupFinish::from(*finish_c);
+    *finish = RollupFinish::from(finish_c);
 
-            log::debug!("finish request written to rollup device: {:#?}", &finish);
+    log::debug!("finish request written to rollup device: {:#?}", &finish);
 
-            Ok(())
-        }
-        _ => {
-            log::error!("failed to write finish request, IOCTL error {}", res);
-
-            Err(Box::new(RollupError::new(&format!(
-                "IOCTL_ROLLUP_FINISH returned error {}",
-                res
-            ))))
-        }
-    }
+    Ok(())
 }
 
 pub fn read_advance_state_request(
@@ -181,51 +167,34 @@ pub fn read_advance_state_request(
         data: std::ptr::null::<::std::os::raw::c_uchar>() as *mut ::std::os::raw::c_uchar,
         length: 0,
     });
-    let mut input_metadata_c = Box::new(bindings::rollup_input_metadata {
-        msg_sender: Default::default(),
-        block_number: 0,
-        timestamp: 0,
-        epoch_index: 0,
-        input_index: 0,
-    });
 
-    let res = unsafe {
+    let input_metadata_c =
         bindings::rollup_read_advance_state_request(
             fd as i32,
             finish_c.as_mut(),
             bytes_c.as_mut(),
-            input_metadata_c.as_mut(),
-        )
-    };
+        )?;
 
-    match res {
-        0 => {
-            if bytes_c.length == 0 {
-                log::info!("read zero size payload from advance state request");
-            }
-
-            let mut payload: Vec<u8> = Vec::with_capacity(bytes_c.length as usize);
-
-            if bytes_c.length > 0 {
-                unsafe {
-                    std::ptr::copy(bytes_c.data, payload.as_mut_ptr(), bytes_c.length as usize);
-                    payload.set_len(bytes_c.length as usize);
-                }
-            }
-
-            let result = AdvanceRequest {
-                metadata: AdvanceMetadata::from(*input_metadata_c),
-                payload: "0x".to_string() + &hex::encode(&payload),
-            };
-            *finish = RollupFinish::from(*finish_c);
-
-            Ok(result)
-        }
-        _ => Err(Box::new(RollupError::new(&format!(
-            "IOCTL_ROLLUP_READ_ADVANCE_STATE returned error {}",
-            res
-        )))),
+    if bytes_c.length == 0 {
+        log::info!("read zero size payload from advance state request");
     }
+
+    let mut payload: Vec<u8> = Vec::with_capacity(bytes_c.length as usize);
+
+    if bytes_c.length > 0 {
+        unsafe {
+            std::ptr::copy(bytes_c.data, payload.as_mut_ptr(), bytes_c.length as usize);
+            payload.set_len(bytes_c.length as usize);
+        }
+    }
+
+    let result = AdvanceRequest {
+        metadata: AdvanceMetadata::from(input_metadata_c),
+        payload: "0x".to_string() + &hex::encode(&payload),
+    };
+    *finish = RollupFinish::from(*finish_c);
+
+    Ok(result)
 }
 
 pub fn read_inspect_state_request(
@@ -238,28 +207,19 @@ pub fn read_inspect_state_request(
         length: 0,
     });
 
-    let res = unsafe { bindings::rollup_read_inspect_state_request(fd as i32, finish_c.as_mut(), bytes_c.as_mut()) };
+    bindings::rollup_read_inspect_state_request(fd as i32, finish_c.as_mut(), bytes_c.as_mut())?;
 
-    match res {
-        0 if bytes_c.length == 0 => Err(Box::new(RollupError::new("read zero size from inspect state request "))),
-        0 => {
-            let mut payload: Vec<u8> = Vec::with_capacity(bytes_c.length as usize);
-            unsafe {
-                std::ptr::copy(bytes_c.data, payload.as_mut_ptr(), bytes_c.length as usize);
-                payload.set_len(bytes_c.length as usize);
-            }
-            let result = InspectRequest {
-                payload: format!("0x{}", hex::encode(&payload)),
-            };
-            *finish = RollupFinish::from(*finish_c);
-
-            Ok(result)
-        }
-        _ => Err(Box::new(RollupError::new(&format!(
-            "IOCTL_ROLLUP_READ_INSPECT_STATE returned error {}",
-            res
-        )))),
+    let mut payload: Vec<u8> = Vec::with_capacity(bytes_c.length as usize);
+    unsafe {
+        std::ptr::copy(bytes_c.data, payload.as_mut_ptr(), bytes_c.length as usize);
+        payload.set_len(bytes_c.length as usize);
     }
+    let result = InspectRequest {
+        payload: format!("0x{}", hex::encode(&payload)),
+    };
+    *finish = RollupFinish::from(*finish_c);
+
+    Ok(result)
 }
 
 pub fn write_notice(fd: RawFd, notice: &mut Notice) -> Result<u64, Box<dyn std::error::Error>> {
@@ -275,28 +235,19 @@ pub fn write_notice(fd: RawFd, notice: &mut Notice) -> Result<u64, Box<dyn std::
         ))
     })?;
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
-    let mut notice_index: std::os::raw::c_ulong = 0;
     let mut bytes_c = Box::new(bindings::rollup_bytes {
         data: buffer.as_mut_ptr() as *mut ::std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
 
-    let res = unsafe {
+    let notice_index = unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_write_notice(fd as i32, bytes_c.as_mut(), &mut notice_index)
-    };
+        bindings::rollup_write_notice(fd as i32, bytes_c.as_mut())
+    }?;
 
-    match res {
-        0 => {
-            log::debug!("notice with id {} successfully written!", notice_index);
+    log::debug!("notice with id {} successfully written!", notice_index);
 
-            Ok(notice_index as u64)
-        }
-        _ => Err(Box::new(RollupError::new(&format!(
-            "IOCTL_ROLLUP_WRITE_NOTICE returned error {}",
-            res
-        )))),
-    }
+    Ok(notice_index)
 }
 
 pub fn write_voucher(fd: RawFd, voucher: &mut Voucher) -> Result<u64, Box<dyn std::error::Error>> {
@@ -317,26 +268,17 @@ pub fn write_voucher(fd: RawFd, voucher: &mut Voucher) -> Result<u64, Box<dyn st
         data: buffer.as_mut_ptr() as *mut ::std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
-    let mut voucher_index: std::os::raw::c_ulong = 0;
-    let mut address_c = hex::decode(&voucher.address[2..])
+    let address_c = hex::decode(&voucher.address[2..])
         .map_err(|e| Box::new(RollupError::new(&format!("address not valid: {}", e))))?;
 
-    let res = unsafe {
+    let voucher_index = unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_write_voucher(fd as i32, address_c.as_mut_ptr(), bytes_c.as_mut(), &mut voucher_index)
-    };
+        bindings::rollup_write_voucher(fd as i32, address_c.try_into().unwrap(), bytes_c.as_mut())
+    }?;
 
-    match res {
-        0 => {
-            log::debug!("voucher with id {} successfully written!", voucher_index);
+    log::debug!("voucher with id {} successfully written!", voucher_index);
 
-            Ok(voucher_index as u64)
-        }
-        _ => Err(Box::new(RollupError::new(&format!(
-            "IOCTL_ROLLUP_WRITE_VOUCHER returned error {}",
-            res
-        )))),
-    }
+    Ok(voucher_index)
 }
 
 pub fn write_report(fd: RawFd, report: &Report) -> Result<(), Box<dyn std::error::Error>> {
@@ -360,22 +302,14 @@ pub fn write_report(fd: RawFd, report: &Report) -> Result<(), Box<dyn std::error
         length: binary_payload.len() as u64,
     });
 
-    let res = unsafe {
+    unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
         bindings::rollup_write_report(fd as i32, bytes_c.as_mut())
-    };
+    }?;
 
-    match res {
-        0 => {
-            log::debug!("report successfully written!");
+    log::debug!("report successfully written!");
 
-            Ok(())
-        }
-        _ => Err(Box::new(RollupError::new(&format!(
-            "IOCTL_ROLLUP_WRITE_REPORT returned error {}",
-            res
-        )))),
-    }
+    Ok(())
 }
 
 pub fn throw_exception(fd: RawFd, exception: &Exception) -> Result<(), Box<dyn std::error::Error>> {
@@ -396,22 +330,14 @@ pub fn throw_exception(fd: RawFd, exception: &Exception) -> Result<(), Box<dyn s
         length: binary_payload.len() as u64,
     });
 
-    let res = unsafe {
+    unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
         bindings::rollup_throw_exception(fd as i32, bytes_c.as_mut())
-    };
+    }?;
 
-    match res {
-        0 => {
-            log::debug!("exception successfully thrown!");
+    log::debug!("exception successfully thrown!");
 
-            Ok(())
-        }
-        _ => Err(Box::new(RollupError::new(&format!(
-            "IOCTL_ROLLUP_THROW_EXCEPTION returned error {}",
-            res
-        )))),
-    }
+    Ok(())
 }
 
 pub fn perform_rollup_finish_request(fd: RawFd, accept: bool) -> io::Result<RollupFinish> {

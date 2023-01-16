@@ -4,10 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "3.2", features = ["derive"] }
+clap = { version = "4", features = ["derive"] }
 thiserror = "1"
-serde = "1"
-cargo_metadata = "0.15"
+serde = { version = "1", features = ["derive"] }
 toml = "0.5"
 sha1 = "0.10"
 hex-literal = "0.3"

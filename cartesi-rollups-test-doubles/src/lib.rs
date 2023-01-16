@@ -1,55 +1,69 @@
+use cartesi_rollups::{MachineIo, RollupsRequest};
 use std::cell::RefCell;
 use std::collections::VecDeque;
-use std::error::Error;
-use cartesi_rollups::{MachineIo, RollupsRequest};
-use thiserror::Error as ThisError;
+use std::rc::Rc;
+use thiserror::Error;
 
-#[derive(ThisError, Debug)]
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+#[derive(Error, Debug)]
 pub enum FakeCartesiMachineError {
     #[error("Reached end of request queue.")]
     EmptyRequests,
 }
 
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Data {
+    pub notices: Vec<Vec<u8>>,
+    pub vouchers: Vec<(Vec<u8>, Vec<u8>)>,
+    pub reports: Vec<Vec<u8>>,
+    pub exceptions: Vec<Vec<u8>>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct FakeCartesiMachine {
     requests: RefCell<VecDeque<RollupsRequest>>,
-    notices: RefCell<Vec<Vec<u8>>>,
-    vouchers: RefCell<Vec<(Vec<u8>, Vec<u8>)>>,
-    reports: RefCell<Vec<Vec<u8>>>,
-    exceptions: RefCell<Vec<Vec<u8>>>,
+    data: Rc<RefCell<Data>>,
 }
 
 impl FakeCartesiMachine {
-    pub fn new(requests: VecDeque<RollupsRequest>) -> Self {
-        Self { requests: RefCell::new(requests), ..Default::default() }
+    pub fn new(requests: impl IntoIterator<Item = RollupsRequest>, data: Rc<RefCell<Data>>) -> Self {
+        Self {
+            requests: RefCell::new(requests.into_iter().collect()),
+            data,
+        }
     }
 }
 
 impl MachineIo for FakeCartesiMachine {
-    fn write_notice(&self, payload: &[u8]) -> Result<usize, Box<dyn Error>> {
-        self.notices.borrow_mut().push(payload.to_vec());
+    fn write_notice(&self, payload: &[u8]) -> Result<usize> {
+        self.data.borrow_mut().notices.push(payload.to_vec());
         Ok(payload.len())
     }
 
-    fn write_voucher(&self, address: &[u8; 20], payload: &[u8]) -> Result<usize, Box<dyn Error>> {
-        self.vouchers.borrow_mut().push((address.to_vec(), payload.to_vec()));
+    fn write_voucher(&self, address: &[u8; 20], payload: &[u8]) -> Result<usize> {
+        self.data
+            .borrow_mut()
+            .vouchers
+            .push((address.to_vec(), payload.to_vec()));
         Ok(payload.len())
     }
 
-    fn write_report(&self, payload: &[u8]) -> Result<(), Box<dyn Error>> {
-        self.reports.borrow_mut().push(payload.to_vec());
+    fn write_report(&self, payload: &[u8]) -> Result<()> {
+        self.data.borrow_mut().reports.push(payload.to_vec());
         Ok(())
     }
 
-    fn submit(&self) -> Result<RollupsRequest, Box<dyn Error>> {
-        Ok(self.requests
+    fn submit(&self) -> Result<RollupsRequest> {
+        Ok(self
+            .requests
             .borrow_mut()
             .pop_front()
             .ok_or_else(|| FakeCartesiMachineError::EmptyRequests)?)
     }
 
-    fn throw_exception(&self, payload: &[u8]) -> Result<(), Box<dyn Error>> {
-        self.exceptions.borrow_mut().push(payload.to_vec());
+    fn throw_exception(&self, payload: &[u8]) -> Result<()> {
+        self.data.borrow_mut().exceptions.push(payload.to_vec());
         Ok(())
     }
 }

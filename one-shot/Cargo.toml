@@ -1,8 +1,0 @@
-[package]
-name = "one-shot"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-cartesi-rollups-linux = { path = "../cartesi-rollups-linux" }
-env_logger = "0.9.1"

@@ -12,9 +12,9 @@ use std::process::ExitCode;
 
 fn main() -> ExitCode {
     let cli: Cli = Figment::new()
-        .merge(Toml::file("CargoCartesi.toml"))
-        .merge(Env::prefixed("CARGO_CARTESI_"))
         .merge(Serialized::defaults(Cli::parse()))
+        .merge(Toml::file("Dapp.toml"))
+        .merge(Env::prefixed("DAPP_"))
         .extract()
         .unwrap();
 

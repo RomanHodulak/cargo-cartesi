@@ -9,9 +9,4 @@ serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 hex = "0.4"
 log = "0.4"
-nix = "0.25"
-
-[build-dependencies]
-bindgen = "0.59"
-cc = "1.0"
-tonic-build = "0.5"
+nix = "0.26"

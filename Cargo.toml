@@ -7,6 +7,6 @@ members = [
     "cartesi-rollups-test",
     "cartesi-rollups-test-doubles",
     "cartesi-rollups-evm-utils",
-    "stoopid",
-    "one-shot",
+    "examples/echo",
+    "examples/one-shot",
 ]

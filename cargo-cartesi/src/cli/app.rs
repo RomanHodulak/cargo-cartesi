@@ -3,7 +3,7 @@ use crate::services::{
     CartesiMachine, DockerCartesiMachine, HostCargo, HostCartesiMachine, HostDependencyDownloader, HostFileSystem,
     HostResourceCreator,
 };
-use clap::clap_derive::ArgEnum;
+use clap::clap_derive::ValueEnum;
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::process::ExitCode;
@@ -53,7 +53,7 @@ impl Commands {
 
 #[derive(Parser, Debug, Serialize, Deserialize)]
 pub struct Cli {
-    #[clap(short, long, arg_enum, default_value = "host")]
+    #[clap(short, long, value_enum, default_value = "host")]
     pub executor: Executor,
     #[clap(subcommand)]
     pub command: Commands,
@@ -70,7 +70,7 @@ impl Cli {
     }
 }
 
-#[derive(Debug, Clone, ArgEnum, Serialize, Deserialize)]
+#[derive(Debug, Clone, ValueEnum, Serialize, Deserialize)]
 pub enum Executor {
     Host,
     Docker,
