@@ -1,33 +1,34 @@
 use nix::ioctl_readwrite;
 use nix::libc::{c_int, realloc, size_t};
 use std::error::Error;
-use std::ffi::c_void;
-use std::mem::MaybeUninit;
-use std::ptr::addr_of_mut;
+use std::os::raw::c_void;
 
 pub const CARTESI_ROLLUP_ADVANCE_STATE: u32 = 0;
 pub const CARTESI_ROLLUP_INSPECT_STATE: u32 = 1;
 pub const CARTESI_ROLLUP_ADDRESS_SIZE: usize = 20;
 
+#[allow(non_camel_case_types)]
+pub type rollup_address = [u8; CARTESI_ROLLUP_ADDRESS_SIZE];
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rollup_finish {
     pub accept_previous_request: bool,
-    pub next_request_type: ::std::os::raw::c_int,
-    pub next_request_payload_length: ::std::os::raw::c_int,
+    pub next_request_type: std::os::raw::c_int,
+    pub next_request_payload_length: std::os::raw::c_int,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rollup_bytes {
-    pub data: *mut ::std::os::raw::c_uchar,
+    pub data: *mut std::os::raw::c_uchar,
     pub length: u64,
 }
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rollup_input_metadata {
-    pub msg_sender: [u8; CARTESI_ROLLUP_ADDRESS_SIZE],
+    pub msg_sender: rollup_address,
     pub block_number: u64,
     pub timestamp: u64,
     pub epoch_index: u64,
@@ -50,7 +51,7 @@ pub struct rollup_inspect_state {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rollup_voucher {
-    pub address: [u8; CARTESI_ROLLUP_ADDRESS_SIZE],
+    pub address: rollup_address,
     pub payload: rollup_bytes,
     pub index: u64,
 }
@@ -83,124 +84,114 @@ ioctl_readwrite!(write_report, 0xd3, 3, rollup_report);
 ioctl_readwrite!(throw_exception, 0xd3, 4, rollup_exception);
 
 pub fn rollup_finish_request(fd: c_int, accept: bool) -> Result<rollup_finish, Box<dyn Error>> {
+    let mut data = rollup_finish {
+        accept_previous_request: accept,
+        next_request_type: 0,
+        next_request_payload_length: 0,
+    };
+
     unsafe {
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_finish>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).accept_previous_request = accept;
-            uninit.assume_init()
-        };
-
-        finish_request(fd, &mut e)?;
-
-        Ok(e.clone())
+        finish_request(fd, &mut data)?;
     }
+
+    Ok(data.clone())
 }
 
 pub fn rollup_read_advance_state_request(
     fd: c_int,
-    finish: *mut rollup_finish,
-    bytes: *mut rollup_bytes,
+    finish: &rollup_finish,
+    payload: *mut rollup_bytes,
 ) -> Result<rollup_input_metadata, Box<dyn Error>> {
-    unsafe {
-        resize_bytes(bytes, (*finish).next_request_payload_length)?;
+    let metadata = rollup_input_metadata {
+        msg_sender: [0; CARTESI_ROLLUP_ADDRESS_SIZE],
+        block_number: 0,
+        timestamp: 0,
+        epoch_index: 0,
+        input_index: 0,
+    };
 
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_advance_state>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).payload = *bytes;
-            uninit.assume_init()
+    unsafe {
+        resize_bytes(payload, finish.next_request_payload_length)?;
+
+        let mut data = rollup_advance_state {
+            metadata,
+            payload: *payload,
         };
 
-        read_advance_state_request(fd, &mut e)?;
-
-        Ok(e.metadata.clone())
+        read_advance_state_request(fd, &mut data)?;
     }
+
+    Ok(metadata)
 }
 
 pub fn rollup_read_inspect_state_request(
     fd: c_int,
-    finish: *mut rollup_finish,
-    query: *mut rollup_bytes,
+    finish: &rollup_finish,
+    payload: *mut rollup_bytes,
 ) -> Result<(), Box<dyn Error>> {
     unsafe {
-        resize_bytes(query, (*finish).next_request_payload_length)?;
+        resize_bytes(payload, finish.next_request_payload_length)?;
 
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_inspect_state>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).payload = *query;
-            uninit.assume_init()
-        };
+        let mut data = rollup_inspect_state { payload: *payload };
 
-        read_inspect_state_request(fd, &mut e)?;
-
-        Ok(())
+        read_inspect_state_request(fd, &mut data)?;
     }
+
+    Ok(())
 }
 
-pub fn rollup_write_voucher(fd: c_int, address: [u8; CARTESI_ROLLUP_ADDRESS_SIZE], bytes: *mut rollup_bytes) -> Result<u64, Box<dyn Error>> {
+pub fn rollup_write_voucher(
+    fd: c_int,
+    address: rollup_address,
+    payload: *mut rollup_bytes,
+) -> Result<u64, Box<dyn Error>> {
     unsafe {
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_voucher>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).payload = *bytes;
-            addr_of_mut!((*data).address).write(address);
-            uninit.assume_init()
+        let mut data = rollup_voucher {
+            address,
+            payload: *payload,
+            index: 0,
         };
 
-        write_voucher(fd, &mut e)?;
+        write_voucher(fd, &mut data)?;
 
-        Ok(e.index)
+        Ok(data.index)
     }
 }
 
-pub fn rollup_write_notice(fd: c_int, bytes: *mut rollup_bytes) -> Result<u64, Box<dyn Error>> {
+pub fn rollup_write_notice(fd: c_int, payload: *mut rollup_bytes) -> Result<u64, Box<dyn Error>> {
     unsafe {
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_notice>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).payload = *bytes;
-            uninit.assume_init()
+        let mut data = rollup_notice {
+            payload: *payload,
+            index: 0,
         };
 
-        write_notice(fd, &mut e)?;
+        write_notice(fd, &mut data)?;
 
-        Ok(e.index)
+        Ok(data.index)
     }
 }
 
-pub fn rollup_write_report(fd: c_int, bytes: *mut rollup_bytes) -> Result<(), Box<dyn Error>> {
+pub fn rollup_write_report(fd: c_int, payload: *mut rollup_bytes) -> Result<(), Box<dyn Error>> {
     unsafe {
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_report>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).payload = *bytes;
-            uninit.assume_init()
-        };
+        let mut data = rollup_report { payload: *payload };
 
-        write_report(fd, &mut e)?;
-
-        Ok(())
+        write_report(fd, &mut data)?;
     }
+
+    Ok(())
 }
 
-pub fn rollup_throw_exception(fd: c_int, bytes: *mut rollup_bytes) -> Result<(), Box<dyn Error>> {
+pub fn rollup_throw_exception(fd: c_int, payload: *mut rollup_bytes) -> Result<(), Box<dyn Error>> {
     unsafe {
-        let mut e = {
-            let mut uninit = MaybeUninit::<rollup_exception>::zeroed();
-            let data = uninit.as_mut_ptr();
-            (*data).payload = *bytes;
-            uninit.assume_init()
-        };
+        let mut data = rollup_exception { payload: *payload };
 
-        throw_exception(fd, &mut e)?;
-
-        Ok(())
+        throw_exception(fd, &mut data)?;
     }
+
+    Ok(())
 }
 
-unsafe fn resize_bytes(bytes: *mut rollup_bytes, size: i32) -> Result<(), Box<dyn Error>> {
+unsafe fn resize_bytes(bytes: *mut rollup_bytes, size: c_int) -> Result<(), Box<dyn Error>> {
     if (*bytes).length >= size.try_into()? {
         return Ok(());
     }

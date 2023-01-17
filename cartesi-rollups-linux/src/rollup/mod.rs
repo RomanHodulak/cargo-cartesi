@@ -162,18 +162,13 @@ pub fn read_advance_state_request(
     fd: RawFd,
     finish: &mut RollupFinish,
 ) -> Result<AdvanceRequest, Box<dyn std::error::Error>> {
-    let mut finish_c = Box::new(bindings::rollup_finish::from(&mut *finish));
+    let finish_c = bindings::rollup_finish::from(&mut *finish);
     let mut bytes_c = Box::new(bindings::rollup_bytes {
-        data: std::ptr::null::<::std::os::raw::c_uchar>() as *mut ::std::os::raw::c_uchar,
+        data: std::ptr::null::<std::os::raw::c_uchar>() as *mut std::os::raw::c_uchar,
         length: 0,
     });
 
-    let input_metadata_c =
-        bindings::rollup_read_advance_state_request(
-            fd as i32,
-            finish_c.as_mut(),
-            bytes_c.as_mut(),
-        )?;
+    let input_metadata_c = bindings::rollup_read_advance_state_request(fd as i32, &finish_c, bytes_c.as_mut())?;
 
     if bytes_c.length == 0 {
         log::info!("read zero size payload from advance state request");
@@ -192,7 +187,7 @@ pub fn read_advance_state_request(
         metadata: AdvanceMetadata::from(input_metadata_c),
         payload: "0x".to_string() + &hex::encode(&payload),
     };
-    *finish = RollupFinish::from(*finish_c);
+    *finish = RollupFinish::from(finish_c);
 
     Ok(result)
 }
@@ -201,13 +196,13 @@ pub fn read_inspect_state_request(
     fd: RawFd,
     finish: &mut RollupFinish,
 ) -> Result<InspectRequest, Box<dyn std::error::Error>> {
-    let mut finish_c = Box::new(bindings::rollup_finish::from(&mut *finish));
+    let finish_c = bindings::rollup_finish::from(&mut *finish);
     let mut bytes_c = Box::new(bindings::rollup_bytes {
-        data: std::ptr::null::<::std::os::raw::c_uchar>() as *mut ::std::os::raw::c_uchar,
+        data: std::ptr::null::<std::os::raw::c_uchar>() as *mut std::os::raw::c_uchar,
         length: 0,
     });
 
-    bindings::rollup_read_inspect_state_request(fd as i32, finish_c.as_mut(), bytes_c.as_mut())?;
+    bindings::rollup_read_inspect_state_request(fd as i32, &finish_c, bytes_c.as_mut())?;
 
     let mut payload: Vec<u8> = Vec::with_capacity(bytes_c.length as usize);
     unsafe {
@@ -217,7 +212,7 @@ pub fn read_inspect_state_request(
     let result = InspectRequest {
         payload: format!("0x{}", hex::encode(&payload)),
     };
-    *finish = RollupFinish::from(*finish_c);
+    *finish = RollupFinish::from(finish_c);
 
     Ok(result)
 }
@@ -236,7 +231,7 @@ pub fn write_notice(fd: RawFd, notice: &mut Notice) -> Result<u64, Box<dyn std::
     })?;
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
     let mut bytes_c = Box::new(bindings::rollup_bytes {
-        data: buffer.as_mut_ptr() as *mut ::std::os::raw::c_uchar,
+        data: buffer.as_mut_ptr() as *mut std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
 
@@ -265,7 +260,7 @@ pub fn write_voucher(fd: RawFd, voucher: &mut Voucher) -> Result<u64, Box<dyn st
     })?;
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
     let mut bytes_c = Box::new(bindings::rollup_bytes {
-        data: buffer.as_mut_ptr() as *mut ::std::os::raw::c_uchar,
+        data: buffer.as_mut_ptr() as *mut std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
     let address_c = hex::decode(&voucher.address[2..])
@@ -298,7 +293,7 @@ pub fn write_report(fd: RawFd, report: &Report) -> Result<(), Box<dyn std::error
     };
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
     let mut bytes_c = Box::new(bindings::rollup_bytes {
-        data: buffer.as_mut_ptr() as *mut ::std::os::raw::c_uchar,
+        data: buffer.as_mut_ptr() as *mut std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
 
@@ -326,7 +321,7 @@ pub fn throw_exception(fd: RawFd, exception: &Exception) -> Result<(), Box<dyn s
     })?;
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
     let mut bytes_c = Box::new(bindings::rollup_bytes {
-        data: buffer.as_mut_ptr() as *mut ::std::os::raw::c_uchar,
+        data: buffer.as_mut_ptr() as *mut std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
 
