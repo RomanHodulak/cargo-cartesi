@@ -9,3 +9,4 @@ env_logger = "0.9"
 
 [dev-dependencies]
 cartesi-rollups-test-doubles = { path = "../../cartesi-rollups-test-doubles" }
+cartesi-rollups-test = { path = "../../cartesi-rollups-test" }
