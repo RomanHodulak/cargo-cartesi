@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::process::ExitCode;
 
 #[derive(Subcommand, Debug, Serialize, Deserialize)]
-pub enum Commands {
+pub enum Command {
     New(NewCommand),
     Build(BuildCommand),
     CreateFs(CreateFsCommand),
@@ -17,28 +17,28 @@ pub enum Commands {
     Run(RunCommand),
 }
 
-impl Commands {
+impl Command {
     pub fn execute<CM: CartesiMachine>(self, services: impl ServiceFactory<CM>) -> ExitCode {
         match self {
-            Commands::New(cmd) => cmd
+            Command::New(cmd) => cmd
                 .handle(
                     services.create_cargo(),
                     services.create_dependencies_downloader(),
                     services.create_resource_creator(),
                 )
                 .expect("failed new"),
-            Commands::Build(cmd) => cmd.handle(services.create_cargo()).expect("failed build"),
-            Commands::CreateFs(cmd) => cmd
+            Command::Build(cmd) => cmd.handle(services.create_cargo()).expect("failed build"),
+            Command::CreateFs(cmd) => cmd
                 .handle(services.create_cargo(), services.create_file_system())
                 .expect("failed create-fs"),
-            Commands::CreateMachine(cmd) => cmd
+            Command::CreateMachine(cmd) => cmd
                 .handle(
                     services.create_cargo(),
                     services.create_file_system(),
                     services.create_cartesi_machine(),
                 )
                 .expect("failed create-machine"),
-            Commands::Run(cmd) => cmd
+            Command::Run(cmd) => cmd
                 .handle(
                     services.create_cargo(),
                     services.create_file_system(),
@@ -52,20 +52,35 @@ impl Commands {
 }
 
 #[derive(Parser, Debug, Serialize, Deserialize)]
+#[clap(
+    bin_name = "cargo",
+    version = clap::crate_version!(),
+)]
 pub struct Cli {
     #[clap(short, long, value_enum, default_value = "host")]
     pub executor: Executor,
     #[clap(subcommand)]
-    pub command: Commands,
+    pub cartesi: CargoInvocation,
+}
+
+#[derive(Parser, Debug, Serialize, Deserialize)]
+pub enum CargoInvocation {
+    Cartesi {
+        #[clap(subcommand)]
+        command: Command,
+    },
 }
 
 impl Cli {
     pub fn run(self) -> ExitCode {
         let services = AppServiceFactory;
+        let command = match self.cartesi {
+            CargoInvocation::Cartesi { command } => command,
+        };
 
         match self.executor {
-            Executor::Host => self.command.execute::<HostCartesiMachine>(services),
-            Executor::Docker => self.command.execute::<DockerCartesiMachine>(services),
+            Executor::Host => command.execute::<HostCartesiMachine>(services),
+            Executor::Docker => command.execute::<DockerCartesiMachine>(services),
         }
     }
 }
