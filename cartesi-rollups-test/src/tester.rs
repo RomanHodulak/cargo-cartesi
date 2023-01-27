@@ -1,7 +1,8 @@
 use std::env;
+use std::error::Error;
 use std::fs::{remove_file, File};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -68,6 +69,8 @@ pub struct TestMachineIo {
     port: u16,
     /// Name of the dapp binary to run on the cartesi machine.
     bin_name: String,
+    /// Directory where cartesi dependencies and build output are placed.
+    target_dir: String,
 }
 
 impl Default for TestMachineIo {
@@ -77,6 +80,7 @@ impl Default for TestMachineIo {
             input_index: 0,
             epoch_index: 0,
             bin_name: env::var("CARGO_PKG_NAME").expect("Cannot read bin_name from CARGO_PKG_NAME"),
+            target_dir: format!("{}/cartesi", Self::target_dir().unwrap()),
         }
     }
 }
@@ -113,10 +117,16 @@ impl TestMachineIo {
             ))
             .arg("--rollup-inspect-state=query:query.bin")
             .arg("--ram-length=128Mi")
-            .arg("--flash-drive=label:dapp,filename:dapp.ext2")
-            .arg("--flash-drive=label:root,filename:rootfs.ext2")
-            .arg("--ram-image=linux-5.5.19-ctsi-6.bin")
-            .arg("--rom-image=rom.bin")
+            .arg(format!(
+                "--flash-drive=label:dapp,filename:{}/dapp.ext2",
+                self.target_dir
+            ))
+            .arg(format!(
+                "--flash-drive=label:root,filename:{}/rootfs.ext2",
+                self.target_dir
+            ))
+            .arg(format!("--ram-image={}/linux-5.5.19-ctsi-6.bin", self.target_dir))
+            .arg(format!("--rom-image={}/rom.bin", self.target_dir))
             .arg("--")
             .arg(format!("/mnt/dapp/{}", self.bin_name))
             .output()
@@ -170,6 +180,36 @@ impl TestMachineIo {
                 value.get("payload").unwrap().as_str().unwrap().to_owned()
             })
             .ok()
+    }
+
+    fn target_name() -> &'static str {
+        "riscv64ima-cartesi-linux-gnu"
+    }
+
+    fn target_dir() -> Result<String, Box<dyn Error>> {
+        let mut path = PathBuf::new().join(env::current_dir()?);
+
+        while path.exists() {
+            let target = path.join("target");
+
+            if target.exists() {
+                path = target;
+                break;
+            }
+
+            path = path.join("..");
+        }
+        if !path.exists() {
+            return Err(Box::try_from("Target not found.").unwrap());
+        }
+
+        Ok(path
+            .join(Self::target_name())
+            .join("release")
+            .canonicalize()?
+            .to_str()
+            .unwrap()
+            .to_owned())
     }
 }
 

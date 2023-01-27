@@ -3,28 +3,35 @@ use hex_literal::hex;
 use sha1::{Digest, Sha1};
 use std::error::Error;
 use std::fs::File;
-use std::io::Read;
+use std::io::{ErrorKind, Read};
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 pub struct HostDependencyDownloader;
 
 impl DependenciesDownloader for HostDependencyDownloader {
-    fn download_if_not_present_and_verify(&self, target_dir: impl AsRef<str>) -> Result<(), Box<dyn Error>> {
+    fn download_if_not_present_and_verify(&self, target_dir: impl AsRef<Path>) -> Result<(), Box<dyn Error>> {
         let items = Self::DEPENDENCIES
             .into_iter()
-            .collect::<Vec<(&'static str, &'static str, [u8; 20])>>();
+            .map(|(url, path, hash)| (url, target_dir.as_ref().to_path_buf().join(path), hash))
+            .filter(|(_, path, hash)| !Self::verify(&path, hash).unwrap())
+            .collect::<Vec<(&'static str, PathBuf, [u8; 20])>>();
 
-        Command::new("wget")
-            .args(items.iter().map(|v| v.0))
-            .arg("-P")
-            .arg(target_dir.as_ref())
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-            .expect("failed to run process `wget`");
+        if !items.is_empty() {
+            Command::new("wget")
+                .args(items.iter().map(|v| v.0))
+                .arg("-P")
+                .arg(target_dir.as_ref())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .expect("failed to run process `wget`");
 
-        for (_, path, hash) in items {
-            Self::verify(&format!("{}/{}", target_dir.as_ref(), path), hash);
+            for (_, path, hash) in &items {
+                if Self::verify(path, hash)? {
+                    println!("{}: Verified OK", path.file_name().unwrap().to_str().unwrap());
+                }
+            }
         }
 
         Ok(())
@@ -50,14 +57,19 @@ impl HostDependencyDownloader {
         ),
     ];
 
-    fn verify(path: impl AsRef<str>, hash: [u8; 20]) {
-        let mut file = File::open(path.as_ref()).unwrap();
+    fn verify(path: impl AsRef<Path>, expected_hash: &[u8; 20]) -> Result<bool, Box<dyn Error>> {
         let mut buffer = vec![];
+
+        match File::open(path.as_ref()) {
+            Ok(mut file) => file.read_to_end(&mut buffer)?,
+            Err(error) if matches!(error.kind(), ErrorKind::NotFound) => return Ok(false),
+            Err(error) => return Err(Box::new(error)),
+        };
+
         let mut hasher = Sha1::new();
-        file.read_to_end(&mut buffer).unwrap();
         hasher.update(buffer);
-        let result = hasher.finalize();
-        assert_eq!(result[..], hash);
-        println!("{}: Verified OK", path.as_ref());
+        let actual_hash = &hasher.finalize()[..];
+
+        Ok(actual_hash == expected_hash)
     }
 }

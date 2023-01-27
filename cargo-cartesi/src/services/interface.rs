@@ -1,9 +1,16 @@
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub trait CartesiMachine {
     fn build(&self, target_binary: impl AsRef<str>, dapp_fs: impl AsRef<str>);
-    fn run_one_shot(&self, target_binary: impl AsRef<str>, dapp_fs: impl AsRef<str>);
+    fn run(
+        &self,
+        target_binary: impl AsRef<str>,
+        rootfs: impl AsRef<str>,
+        ram_image: impl AsRef<str>,
+        rom_image: impl AsRef<str>,
+        dapp_fs: impl AsRef<str>,
+    );
 }
 
 pub trait Cargo {
@@ -26,7 +33,7 @@ pub trait FileSystem {
 }
 
 pub trait DependenciesDownloader {
-    fn download_if_not_present_and_verify(&self, target_dir: impl AsRef<str>) -> Result<(), Box<dyn Error>>;
+    fn download_if_not_present_and_verify(&self, target_dir: impl AsRef<Path>) -> Result<(), Box<dyn Error>>;
 }
 
 pub trait ResourceCreator {

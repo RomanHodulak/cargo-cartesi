@@ -21,11 +21,7 @@ impl Command {
     pub fn execute<CM: CartesiMachine>(self, services: impl ServiceFactory<CM>) -> ExitCode {
         match self {
             Command::New(cmd) => cmd
-                .handle(
-                    services.create_cargo(),
-                    services.create_dependencies_downloader(),
-                    services.create_resource_creator(),
-                )
+                .handle(services.create_cargo(), services.create_resource_creator())
                 .expect("failed new"),
             Command::Build(cmd) => cmd.handle(services.create_cargo()).expect("failed build"),
             Command::CreateFs(cmd) => cmd
@@ -35,6 +31,7 @@ impl Command {
                 .handle(
                     services.create_cargo(),
                     services.create_file_system(),
+                    services.create_dependencies_downloader(),
                     services.create_cartesi_machine(),
                 )
                 .expect("failed create-machine"),
@@ -42,6 +39,7 @@ impl Command {
                 .handle(
                     services.create_cargo(),
                     services.create_file_system(),
+                    services.create_dependencies_downloader(),
                     services.create_cartesi_machine(),
                 )
                 .expect("failed run"),

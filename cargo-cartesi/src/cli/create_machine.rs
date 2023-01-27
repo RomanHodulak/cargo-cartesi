@@ -1,5 +1,5 @@
 use crate::commands;
-use crate::services::{Cargo, CartesiMachine, FileSystem};
+use crate::services::{Cargo, CartesiMachine, DependenciesDownloader, FileSystem};
 use clap::Args;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -20,10 +20,18 @@ impl CreateMachineCommand {
         self,
         cargo: impl Cargo,
         file_system: impl FileSystem,
+        deps: impl DependenciesDownloader,
         cartesi_machine: impl CartesiMachine,
     ) -> Result<(), CreateMachineCommandError> {
-        commands::CreateMachineCommand::handle(self.target_bin, self.output_fs, &cargo, &file_system, &cartesi_machine)
-            .unwrap();
+        commands::CreateMachineCommand::handle(
+            self.target_bin,
+            self.output_fs,
+            &deps,
+            &cargo,
+            &file_system,
+            &cartesi_machine,
+        )
+        .unwrap();
 
         Ok(())
     }

@@ -24,7 +24,14 @@ impl CartesiMachine for DockerCartesiMachine {
             .expect("failed to run process `docker`");
     }
 
-    fn run_one_shot(&self, target_binary: impl AsRef<str>, dapp_fs: impl AsRef<str>) {
+    fn run(
+        &self,
+        target_binary: impl AsRef<str>,
+        rootfs: impl AsRef<str>,
+        ram_image: impl AsRef<str>,
+        rom_image: impl AsRef<str>,
+        dapp_fs: impl AsRef<str>,
+    ) {
         Command::new("docker")
             .arg("run")
             .arg("--volume")
@@ -35,10 +42,10 @@ impl CartesiMachine for DockerCartesiMachine {
             .arg("-t")
             .arg("cartesi/server-manager:0.4.0")
             .arg("cartesi-machine")
-            .arg("--flash-drive=label:root,filename:dapp/rootfs.ext2")
+            .arg(format!("--flash-drive=label:root,filename:dapp/{}", rootfs.as_ref()))
             .arg(format!("--flash-drive=label:dapp,filename:dapp/{}", dapp_fs.as_ref()))
-            .arg("--ram-image=dapp/linux-5.5.19-ctsi-6.bin")
-            .arg("--rom-image=dapp/rom.bin")
+            .arg(format!("--ram-image=dapp/{}", ram_image.as_ref()))
+            .arg(format!("--rom-image=dapp/{}", rom_image.as_ref()))
             .arg("--")
             .arg(format!("cd /mnt/dapp; ./{}", target_binary.as_ref()))
             .stdout(Stdio::inherit())

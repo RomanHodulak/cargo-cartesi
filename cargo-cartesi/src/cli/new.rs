@@ -1,5 +1,5 @@
 use crate::commands;
-use crate::services::{Cargo, DependenciesDownloader, ResourceCreator};
+use crate::services::{Cargo, ResourceCreator};
 use clap::Args;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -14,13 +14,8 @@ pub struct NewCommand {
 }
 
 impl NewCommand {
-    pub fn handle(
-        self,
-        cargo: impl Cargo,
-        deps: impl DependenciesDownloader,
-        res: impl ResourceCreator,
-    ) -> Result<(), NewCommandError> {
-        commands::NewCommand::handle(self.target_dir, &deps, &res, &cargo).unwrap();
+    pub fn handle(self, cargo: impl Cargo, res: impl ResourceCreator) -> Result<(), NewCommandError> {
+        commands::NewCommand::handle(self.target_dir, &res, &cargo).unwrap();
 
         Ok(())
     }
