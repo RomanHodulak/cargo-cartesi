@@ -2,7 +2,14 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 
 pub trait CartesiMachine {
-    fn build(&self, target_binary: impl AsRef<str>, dapp_fs: impl AsRef<str>);
+    fn build(
+        &self,
+        target_binary: impl AsRef<str>,
+        rootfs: impl AsRef<str>,
+        ram_image: impl AsRef<str>,
+        rom_image: impl AsRef<str>,
+        dapp_fs: impl AsRef<str>,
+    );
     fn run(
         &self,
         target_binary: impl AsRef<str>,

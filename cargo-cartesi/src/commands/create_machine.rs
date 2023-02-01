@@ -26,12 +26,19 @@ impl CreateMachineCommand {
 
         std::fs::create_dir_all(&target_cartesi_dir).unwrap();
 
+        let rootfs = target_cartesi_dir.join("rootfs.ext2");
+        let ram_image = target_cartesi_dir.join("linux-5.5.19-ctsi-6.bin");
+        let rom_image = target_cartesi_dir.join("rom.bin");
         let output = target_cartesi_dir.join(dapp_fs.as_ref());
+
+        let rootfs = rootfs.to_str().unwrap();
+        let ram_image = ram_image.to_str().unwrap();
+        let rom_image = rom_image.to_str().unwrap();
         let output = output.to_str().unwrap();
 
         file_system.create(once(target_dir), None, output).unwrap();
         deps.download_if_not_present_and_verify(target_cartesi_dir).unwrap();
-        cartesi_machine.build(target_bin, output);
+        cartesi_machine.build(target_bin, rootfs, ram_image, rom_image, output);
 
         Ok(())
     }
