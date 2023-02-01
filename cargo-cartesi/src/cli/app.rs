@@ -55,8 +55,6 @@ impl Command {
     version = clap::crate_version!(),
 )]
 pub struct Cli {
-    #[clap(short, long, value_enum, default_value = "host")]
-    pub executor: Executor,
     #[clap(subcommand)]
     pub cartesi: CargoInvocation,
 }
@@ -64,6 +62,8 @@ pub struct Cli {
 #[derive(Parser, Debug, Serialize, Deserialize)]
 pub enum CargoInvocation {
     Cartesi {
+        #[clap(short, long, value_enum, default_value = "host")]
+        executor: Executor,
         #[clap(subcommand)]
         command: Command,
     },
@@ -72,13 +72,12 @@ pub enum CargoInvocation {
 impl Cli {
     pub fn run(self) -> ExitCode {
         let services = AppServiceFactory;
-        let command = match self.cartesi {
-            CargoInvocation::Cartesi { command } => command,
-        };
 
-        match self.executor {
-            Executor::Host => command.execute::<HostCartesiMachine>(services),
-            Executor::Docker => command.execute::<DockerCartesiMachine>(services),
+        match self.cartesi {
+            CargoInvocation::Cartesi { command, executor } => match executor {
+                Executor::Host => command.execute::<HostCartesiMachine>(services),
+                Executor::Docker => command.execute::<DockerCartesiMachine>(services),
+            },
         }
     }
 }
