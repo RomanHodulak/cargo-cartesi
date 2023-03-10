@@ -6,3 +6,9 @@ edition = "2021"
 [dependencies]
 serde_json = { version = "1", default-features = false, features = ["std"] }
 cartesi-rollups = { path = "../cartesi-rollups" }
+thiserror = { version = "1", optional = true }
+
+[features]
+default = []
+integration = []
+unit = ["thiserror"]

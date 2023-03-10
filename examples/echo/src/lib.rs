@@ -20,7 +20,7 @@ pub fn run(machine: impl MachineIo) -> Result<(), Box<dyn Error>> {
 mod tests {
     use super::*;
     use cartesi_rollups_linux::RollupsMetadata;
-    use cartesi_rollups_test_doubles::{Data, FakeCartesiMachine};
+    use cartesi_rollups_test::{Data, FakeCartesiMachine};
     use std::cell::RefCell;
     use std::rc::Rc;
 

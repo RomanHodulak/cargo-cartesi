@@ -1,3 +1,6 @@
+//! Items in this module communicate with the rollup device using IOCTL functions.
+//!
+//! All the IOCTL wiring is implemented in this crate and exposed as an abstraction over the native functions.
 use nix::ioctl_readwrite;
 use nix::libc::{c_int, realloc, size_t};
 use std::error::Error;
@@ -94,7 +97,7 @@ pub fn rollup_finish_request(fd: c_int, accept: bool) -> Result<rollup_finish, B
         finish_request(fd, &mut data)?;
     }
 
-    Ok(data.clone())
+    Ok(data)
 }
 
 pub fn rollup_read_advance_state_request(

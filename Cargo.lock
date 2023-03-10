@@ -67,17 +67,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "cartesi-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "cartesi-rollups"
 version = "0.1.0"
+
+[[package]]
+name = "cartesi-rollups-bindings"
+version = "0.1.0"
+dependencies = [
+ "nix",
+]
 
 [[package]]
 name = "cartesi-rollups-evm-utils"
@@ -88,6 +86,7 @@ name = "cartesi-rollups-linux"
 version = "0.1.0"
 dependencies = [
  "cartesi-rollups",
+ "cartesi-rollups-bindings",
  "hex",
  "log",
  "nix",
@@ -101,13 +100,6 @@ version = "0.1.0"
 dependencies = [
  "cartesi-rollups",
  "serde_json",
-]
-
-[[package]]
-name = "cartesi-rollups-test-doubles"
-version = "0.1.0"
-dependencies = [
- "cartesi-rollups",
  "thiserror",
 ]
 
@@ -195,7 +187,6 @@ version = "0.1.0"
 dependencies = [
  "cartesi-rollups-linux",
  "cartesi-rollups-test",
- "cartesi-rollups-test-doubles",
  "env_logger",
 ]
 

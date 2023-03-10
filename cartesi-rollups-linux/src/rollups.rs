@@ -1,4 +1,5 @@
 //! Implements Rust api to use Linux rollup device
+use cartesi_rollups_bindings as bindings;
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::io::ErrorKind;
@@ -8,8 +9,6 @@ use thiserror::Error;
 pub use bindings::CARTESI_ROLLUP_ADDRESS_SIZE;
 pub use bindings::CARTESI_ROLLUP_ADVANCE_STATE;
 pub use bindings::CARTESI_ROLLUP_INSPECT_STATE;
-
-mod bindings;
 
 /// Rollup device driver path
 pub const ROLLUP_DEVICE_NAME: &str = "/dev/rollup";

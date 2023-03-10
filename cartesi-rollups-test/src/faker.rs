@@ -1,3 +1,29 @@
+//! Items in this module implement [`MachineIo`] in-memory with pre-programmed set of requests.
+//!
+//! This kind of implementation is useful for unit tests with a set of requests triggering your target scenario while
+//! also being free of side-effects and external dependencies.
+//!
+//! # Examples
+//!
+//! ```
+//! # use std::error::Error;
+//! # use cartesi_rollups::{MachineIo, RollupsRequest};
+//! # pub fn run(machine: impl MachineIo) -> Result<(), Box<dyn Error>> {
+//! # let address = [0u8; 20];
+//! let request = machine.submit()?;
+//!
+//! match request {
+//!     RollupsRequest::AdvanceState { payload, .. } => {
+//!         machine.write_notice(&payload)?;
+//!         machine.write_voucher(&address, &payload)?;
+//!     }
+//!     RollupsRequest::InspectState { payload } => {
+//!         machine.write_report(&payload)?;
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! ```
 use cartesi_rollups::{MachineIo, RollupsRequest};
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -6,6 +32,11 @@ use thiserror::Error;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+/// Defines errors of in-memory Cartesi rollup device.
+///
+/// This variant [`FakeCartesiMachineError::EmptyRequests`] is thrown after [`submitting`] past the last popped request.
+///
+/// [`submitting`]: MachineIo::submit
 #[derive(Error, Debug)]
 pub enum FakeCartesiMachineError {
     #[error("Reached end of request queue.")]
@@ -20,6 +51,7 @@ pub struct Data {
     pub exceptions: Vec<Vec<u8>>,
 }
 
+/// See the [module-level documentation](./index.html) for more details.
 #[derive(Clone, Debug, Default)]
 pub struct FakeCartesiMachine {
     requests: RefCell<VecDeque<RollupsRequest>>,
@@ -27,6 +59,9 @@ pub struct FakeCartesiMachine {
 }
 
 impl FakeCartesiMachine {
+    /// Creates new in-memory Cartesi rollup device popping `requests` per [`submit`].
+    ///
+    /// [`submit`]: MachineIo::submit
     pub fn new(requests: impl IntoIterator<Item = RollupsRequest>, data: Rc<RefCell<Data>>) -> Self {
         Self {
             requests: RefCell::new(requests.into_iter().collect()),

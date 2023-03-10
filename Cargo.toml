@@ -1,12 +1,11 @@
 [workspace]
 members = [
     "cargo-cartesi",
-    "cartesi-macros",
     "cartesi-rollups",
+    "cartesi-rollups-bindings",
+    "cartesi-rollups-evm-utils",
     "cartesi-rollups-linux",
     "cartesi-rollups-test",
-    "cartesi-rollups-test-doubles",
-    "cartesi-rollups-evm-utils",
     "examples/echo",
     "examples/one-shot",
 ]

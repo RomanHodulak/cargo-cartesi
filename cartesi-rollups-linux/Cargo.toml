@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 cartesi-rollups = { path = "../cartesi-rollups" }
+cartesi-rollups-bindings = { path = "../cartesi-rollups-bindings" }
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 hex = "0.4"

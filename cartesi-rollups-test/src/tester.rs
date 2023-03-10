@@ -260,12 +260,12 @@ impl RequestWriter {
         let input = Command::new("echo")
             .arg(format!(
                 "{{
-                \"msg_sender\": \"{}\",
-                \"epoch_index\": \"{}\",
-                \"input_index\": \"{}\"
-                \"block_number\": \"{}\"
-                \"time_stamp\": \"{}\"
-            }}",
+                    \"msg_sender\": \"{}\",
+                    \"epoch_index\": \"{}\",
+                    \"input_index\": \"{}\",
+                    \"block_number\": \"{}\",
+                    \"time_stamp\": \"{}\"
+                }}",
                 msg_sender.as_ref(),
                 epoch_index,
                 input_index,

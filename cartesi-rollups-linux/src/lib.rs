@@ -1,5 +1,6 @@
+mod conversions;
 mod machine;
-mod rollup;
+mod rollups;
 
 pub use cartesi_rollups::*;
 pub use machine::*;
