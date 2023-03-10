@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - v*
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: 📜 Check format
+      run: cargo fmt --all --check
+    - name: 📦 Check sort
+      run: cargo sort --workspace --check
+    - name: 📦 Check unused deps
+      run: cargo udeps --all-features --all-targets
+    - name: 📎 Check clippy
+      run: cargo clippy --all-features --all-targets
+    - name: 🔨 Build
+      run: cargo build --all-features --all-targets
+    - name: 🚦 Test
+      run: cargo test --all-features
