@@ -22,7 +22,7 @@ impl CreateFsCommand {
         cargo.build_binary();
 
         let target_bin = target_binary.unwrap_or(cargo.package_name().unwrap());
-        let target_dir = PathBuf::from(cargo.target_dir().unwrap()).join(&target_bin);
+        let target_dir = PathBuf::from(cargo.target_dir().unwrap()).join(target_bin);
         let target_cartesi_dir = PathBuf::from(cargo.target_dir().unwrap()).join("cartesi");
 
         std::fs::create_dir_all(&target_cartesi_dir).unwrap();

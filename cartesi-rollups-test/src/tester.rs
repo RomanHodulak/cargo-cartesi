@@ -142,9 +142,9 @@ impl TestMachineIo {
 
         let r#type = "notice";
         let values = (0..=self.epoch_index)
-            .map(|epoch_index| {
+            .flat_map(|epoch_index| {
                 (1..=self.input_index)
-                    .map(move |input_index| {
+                    .flat_map(move |input_index| {
                         (0..usize::MAX).map_while(move |notice_index| {
                             let path = format!(
                                 "epoch-{}-input-{}-{}-{}.bin",
@@ -158,9 +158,7 @@ impl TestMachineIo {
                             })
                         })
                     })
-                    .flatten()
             })
-            .flatten()
             .collect();
 
         (values, reports)

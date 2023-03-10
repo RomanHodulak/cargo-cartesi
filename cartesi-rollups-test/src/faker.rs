@@ -94,7 +94,7 @@ impl MachineIo for FakeCartesiMachine {
             .requests
             .borrow_mut()
             .pop_front()
-            .ok_or_else(|| FakeCartesiMachineError::EmptyRequests)?)
+            .ok_or(FakeCartesiMachineError::EmptyRequests)?)
     }
 
     fn throw_exception(&self, payload: &[u8]) -> Result<()> {

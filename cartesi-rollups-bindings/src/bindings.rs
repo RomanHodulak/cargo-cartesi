@@ -103,7 +103,7 @@ pub fn rollup_finish_request(fd: c_int, accept: bool) -> Result<rollup_finish, B
 pub fn rollup_read_advance_state_request(
     fd: c_int,
     finish: &rollup_finish,
-    payload: *mut rollup_bytes,
+    payload: &mut Box<rollup_bytes>,
 ) -> Result<rollup_input_metadata, Box<dyn Error>> {
     let metadata = rollup_input_metadata {
         msg_sender: [0; CARTESI_ROLLUP_ADDRESS_SIZE],
@@ -114,11 +114,11 @@ pub fn rollup_read_advance_state_request(
     };
 
     unsafe {
-        resize_bytes(payload, finish.next_request_payload_length)?;
+        resize_bytes(payload.as_mut(), finish.next_request_payload_length)?;
 
         let mut data = rollup_advance_state {
             metadata,
-            payload: *payload,
+            payload: *payload.as_mut(),
         };
 
         read_advance_state_request(fd, &mut data)?;
@@ -130,12 +130,14 @@ pub fn rollup_read_advance_state_request(
 pub fn rollup_read_inspect_state_request(
     fd: c_int,
     finish: &rollup_finish,
-    payload: *mut rollup_bytes,
+    payload: &mut Box<rollup_bytes>,
 ) -> Result<(), Box<dyn Error>> {
     unsafe {
-        resize_bytes(payload, finish.next_request_payload_length)?;
+        resize_bytes(payload.as_mut(), finish.next_request_payload_length)?;
 
-        let mut data = rollup_inspect_state { payload: *payload };
+        let mut data = rollup_inspect_state {
+            payload: *payload.as_mut(),
+        };
 
         read_inspect_state_request(fd, &mut data)?;
     }
@@ -146,12 +148,12 @@ pub fn rollup_read_inspect_state_request(
 pub fn rollup_write_voucher(
     fd: c_int,
     address: rollup_address,
-    payload: *mut rollup_bytes,
+    payload: &mut Box<rollup_bytes>,
 ) -> Result<u64, Box<dyn Error>> {
     unsafe {
         let mut data = rollup_voucher {
             address,
-            payload: *payload,
+            payload: *payload.as_mut(),
             index: 0,
         };
 
@@ -161,10 +163,10 @@ pub fn rollup_write_voucher(
     }
 }
 
-pub fn rollup_write_notice(fd: c_int, payload: *mut rollup_bytes) -> Result<u64, Box<dyn Error>> {
+pub fn rollup_write_notice(fd: c_int, payload: &mut Box<rollup_bytes>) -> Result<u64, Box<dyn Error>> {
     unsafe {
         let mut data = rollup_notice {
-            payload: *payload,
+            payload: *payload.as_mut(),
             index: 0,
         };
 
@@ -174,9 +176,11 @@ pub fn rollup_write_notice(fd: c_int, payload: *mut rollup_bytes) -> Result<u64,
     }
 }
 
-pub fn rollup_write_report(fd: c_int, payload: *mut rollup_bytes) -> Result<(), Box<dyn Error>> {
+pub fn rollup_write_report(fd: c_int, payload: &mut Box<rollup_bytes>) -> Result<(), Box<dyn Error>> {
     unsafe {
-        let mut data = rollup_report { payload: *payload };
+        let mut data = rollup_report {
+            payload: *payload.as_mut(),
+        };
 
         write_report(fd, &mut data)?;
     }
@@ -184,9 +188,11 @@ pub fn rollup_write_report(fd: c_int, payload: *mut rollup_bytes) -> Result<(), 
     Ok(())
 }
 
-pub fn rollup_throw_exception(fd: c_int, payload: *mut rollup_bytes) -> Result<(), Box<dyn Error>> {
+pub fn rollup_throw_exception(fd: c_int, payload: &mut Box<rollup_bytes>) -> Result<(), Box<dyn Error>> {
     unsafe {
-        let mut data = rollup_exception { payload: *payload };
+        let mut data = rollup_exception {
+            payload: *payload.as_mut(),
+        };
 
         throw_exception(fd, &mut data)?;
     }

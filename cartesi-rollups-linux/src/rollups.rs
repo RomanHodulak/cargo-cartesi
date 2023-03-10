@@ -81,7 +81,7 @@ impl AdvanceMetadata {
 
 impl From<bindings::rollup_input_metadata> for AdvanceMetadata {
     fn from(other: bindings::rollup_input_metadata) -> Self {
-        let address = format!("0x{}", hex::encode(&other.msg_sender));
+        let address = format!("0x{}", hex::encode(other.msg_sender));
 
         Self {
             input_index: other.input_index,
@@ -148,7 +148,7 @@ pub struct Exception {
 pub fn finish_request(fd: RawFd, finish: &mut RollupFinish, accept: bool) -> Result<(), Box<dyn std::error::Error>> {
     log::debug!("writing rollup finish request, yielding");
 
-    let finish_c = bindings::rollup_finish_request(fd as i32, accept)?;
+    let finish_c = bindings::rollup_finish_request(fd, accept)?;
 
     *finish = RollupFinish::from(finish_c);
 
@@ -167,7 +167,7 @@ pub fn read_advance_state_request(
         length: 0,
     });
 
-    let input_metadata_c = bindings::rollup_read_advance_state_request(fd as i32, &finish_c, bytes_c.as_mut())?;
+    let input_metadata_c = bindings::rollup_read_advance_state_request(fd, &finish_c, &mut bytes_c)?;
 
     if bytes_c.length == 0 {
         log::info!("read zero size payload from advance state request");
@@ -201,7 +201,7 @@ pub fn read_inspect_state_request(
         length: 0,
     });
 
-    bindings::rollup_read_inspect_state_request(fd as i32, &finish_c, bytes_c.as_mut())?;
+    bindings::rollup_read_inspect_state_request(fd, &finish_c, &mut bytes_c)?;
 
     let mut payload: Vec<u8> = Vec::with_capacity(bytes_c.length as usize);
     unsafe {
@@ -236,7 +236,7 @@ pub fn write_notice(fd: RawFd, notice: &mut Notice) -> Result<u64, Box<dyn std::
 
     let notice_index = unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_write_notice(fd as i32, bytes_c.as_mut())
+        bindings::rollup_write_notice(fd, &mut bytes_c)
     }?;
 
     log::debug!("notice with id {} successfully written!", notice_index);
@@ -267,7 +267,7 @@ pub fn write_voucher(fd: RawFd, voucher: &mut Voucher) -> Result<u64, Box<dyn st
 
     let voucher_index = unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_write_voucher(fd as i32, address_c.try_into().unwrap(), bytes_c.as_mut())
+        bindings::rollup_write_voucher(fd, address_c.try_into().unwrap(), &mut bytes_c)
     }?;
 
     log::debug!("voucher with id {} successfully written!", voucher_index);
@@ -285,9 +285,7 @@ pub fn write_report(fd: RawFd, report: &Report) -> Result<(), Box<dyn std::error
     let binary_payload = match hex::decode(&report.payload[2..]) {
         Ok(payload) => payload,
         Err(_err) => {
-            return Err(Box::new(RollupError::new(&format!(
-                "Error decoding report payload, payload must be in Ethereum hex binary format"
-            ))));
+            return Err(Box::new(RollupError::new("Error decoding report payload, payload must be in Ethereum hex binary format")));
         }
     };
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
@@ -298,7 +296,7 @@ pub fn write_report(fd: RawFd, report: &Report) -> Result<(), Box<dyn std::error
 
     unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_write_report(fd as i32, bytes_c.as_mut())
+        bindings::rollup_write_report(fd, &mut bytes_c)
     }?;
 
     log::debug!("report successfully written!");
@@ -326,7 +324,7 @@ pub fn throw_exception(fd: RawFd, exception: &Exception) -> Result<(), Box<dyn s
 
     unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_throw_exception(fd as i32, bytes_c.as_mut())
+        bindings::rollup_throw_exception(fd, &mut bytes_c)
     }?;
 
     log::debug!("exception successfully thrown!");

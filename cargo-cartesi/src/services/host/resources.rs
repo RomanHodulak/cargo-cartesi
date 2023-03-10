@@ -10,7 +10,7 @@ impl ResourceCreator for HostResourceCreator {
         for (contents, name) in Self::RESOURCES.iter() {
             let path = format!("{}/{}", target_dir.as_ref(), name);
             let mut file = File::create(path)?;
-            file.write_all(*contents)?;
+            file.write_all(contents)?;
         }
 
         Ok(())

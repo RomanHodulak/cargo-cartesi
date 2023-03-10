@@ -43,9 +43,9 @@ impl MachineIo for LinuxMachine {
     }
 
     fn write_report(&self, payload: &[u8]) -> Result<(), Box<dyn Error>> {
-        let mut report = Report::try_from(payload)?;
+        let report = Report::try_from(payload)?;
 
-        rollups::write_report(self.fd, &mut report)
+        rollups::write_report(self.fd, &report)
     }
 
     fn submit(&self) -> Result<RollupsRequest, Box<dyn Error>> {

@@ -14,7 +14,7 @@ impl DependenciesDownloader for HostDependencyDownloader {
         let items = Self::DEPENDENCIES
             .into_iter()
             .map(|(url, path, hash)| (url, target_dir.as_ref().to_path_buf().join(path), hash))
-            .filter(|(_, path, hash)| !Self::verify(&path, hash).unwrap())
+            .filter(|(_, path, hash)| !Self::verify(path, hash).unwrap())
             .collect::<Vec<(&'static str, PathBuf, [u8; 20])>>();
 
         if !items.is_empty() {
