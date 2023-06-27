@@ -143,21 +143,20 @@ impl TestMachineIo {
         let r#type = "notice";
         let values = (0..=self.epoch_index)
             .flat_map(|epoch_index| {
-                (1..=self.input_index)
-                    .flat_map(move |input_index| {
-                        (0..usize::MAX).map_while(move |notice_index| {
-                            let path = format!(
-                                "epoch-{}-input-{}-{}-{}.bin",
-                                epoch_index, input_index, r#type, notice_index
-                            );
-                            Self::decode_from_file(path, r#type).map(|payload| Notice {
-                                epoch_index,
-                                input_index,
-                                notice_index,
-                                payload,
-                            })
+                (1..=self.input_index).flat_map(move |input_index| {
+                    (0..usize::MAX).map_while(move |notice_index| {
+                        let path = format!(
+                            "epoch-{}-input-{}-{}-{}.bin",
+                            epoch_index, input_index, r#type, notice_index
+                        );
+                        Self::decode_from_file(path, r#type).map(|payload| Notice {
+                            epoch_index,
+                            input_index,
+                            notice_index,
+                            payload,
                         })
                     })
+                })
             })
             .collect();
 

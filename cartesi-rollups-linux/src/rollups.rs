@@ -285,7 +285,9 @@ pub fn write_report(fd: RawFd, report: &Report) -> Result<(), Box<dyn std::error
     let binary_payload = match hex::decode(&report.payload[2..]) {
         Ok(payload) => payload,
         Err(_err) => {
-            return Err(Box::new(RollupError::new("Error decoding report payload, payload must be in Ethereum hex binary format")));
+            return Err(Box::new(RollupError::new(
+                "Error decoding report payload, payload must be in Ethereum hex binary format",
+            )));
         }
     };
     let mut buffer: Vec<u8> = Vec::with_capacity(binary_payload.len());
