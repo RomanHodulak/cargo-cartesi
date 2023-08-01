@@ -20,9 +20,9 @@ jobs:
     - name: 📜 Check format
       run: cargo fmt --all --check
     - name: 📦 Check sort
-      run: cargo sort --workspace --check
+      run: cargo install cargo-sort && cargo sort --workspace --check
     - name: 📦 Check unused deps
-      run: cargo udeps --all-features --all-targets
+      run: cargo install cargo-udeps && cargo +nightly udeps --all-features --all-targets
     - name: 📎 Check clippy
       run: cargo clippy --all-features --all-targets
     - name: 🔨 Build
