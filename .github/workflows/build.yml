@@ -22,7 +22,7 @@ jobs:
     - name: 📦 Check sort
       run: cargo install cargo-sort && cargo sort --workspace --check
     - name: 📦 Check unused deps
-      run: cargo install cargo-udeps && cargo +nightly udeps --all-features --all-targets
+      run: cargo install cargo-udeps && rustup install nightly-2023-06-01 && cargo +nightly-2023-06-01 udeps --all-features --all-targets
     - name: 📎 Check clippy
       run: cargo clippy --all-features --all-targets
     - name: 🔨 Build
