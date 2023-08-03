@@ -70,7 +70,7 @@ pub struct AdvanceMetadata {
 }
 
 impl AdvanceMetadata {
-    /// Returns the address with the `Ox` prefix stripped if present.
+    /// Returns the sender address with the `Ox` prefix stripped if present.
     pub fn msg_sender_without_prefix(&self) -> &str {
         match self.msg_sender.starts_with("0x") {
             true => &self.msg_sender[2..],
@@ -121,16 +121,16 @@ pub struct Notice {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Voucher {
-    pub address: String,
+    pub destination: String,
     pub payload: String,
 }
 
 impl Voucher {
-    /// Returns the address with the `Ox` prefix stripped if present.
-    pub fn address_without_prefix(&self) -> &str {
-        match self.address.starts_with("0x") {
-            true => &self.address[2..],
-            false => &self.address,
+    /// Returns the destination address with the `Ox` prefix stripped if present.
+    pub fn destination_without_prefix(&self) -> &str {
+        match self.destination.starts_with("0x") {
+            true => &self.destination[2..],
+            false => &self.destination,
         }
     }
 }
@@ -246,8 +246,8 @@ pub fn write_notice(fd: RawFd, notice: &mut Notice) -> Result<u64, Box<dyn std::
 
 pub fn write_voucher(fd: RawFd, voucher: &mut Voucher) -> Result<u64, Box<dyn std::error::Error>> {
     log::debug!(
-        "voucher: {{ address: 0x{} length: {} payload: {} }}",
-        voucher.address_without_prefix(),
+        "voucher: {{ destination: 0x{} length: {} payload: {} }}",
+        voucher.destination_without_prefix(),
         voucher.payload.len(),
         voucher.payload
     );
@@ -262,12 +262,12 @@ pub fn write_voucher(fd: RawFd, voucher: &mut Voucher) -> Result<u64, Box<dyn st
         data: buffer.as_mut_ptr() as *mut std::os::raw::c_uchar,
         length: binary_payload.len() as u64,
     });
-    let address_c = hex::decode(&voucher.address[2..])
-        .map_err(|e| Box::new(RollupError::new(&format!("address not valid: {}", e))))?;
+    let destination_c = hex::decode(&voucher.destination[2..])
+        .map_err(|e| Box::new(RollupError::new(&format!("destination address not valid: {}", e))))?;
 
     let voucher_index = unsafe {
         std::ptr::copy(binary_payload.as_ptr(), buffer.as_mut_ptr(), binary_payload.len());
-        bindings::rollup_write_voucher(fd, address_c.try_into().unwrap(), &mut bytes_c)
+        bindings::rollup_write_voucher(fd, destination_c.try_into().unwrap(), &mut bytes_c)
     }?;
 
     log::debug!("voucher with id {} successfully written!", voucher_index);

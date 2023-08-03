@@ -12,10 +12,10 @@ impl TryFrom<&[u8]> for Notice {
 impl TryFrom<(&[u8; 20], &[u8])> for Voucher {
     type Error = FromUtf8Error;
     fn try_from(voucher: (&[u8; 20], &[u8])) -> Result<Self, Self::Error> {
-        let address = String::from_utf8(voucher.0.to_vec())?;
+        let destination = String::from_utf8(voucher.0.to_vec())?;
         let payload = String::from_utf8(voucher.1.to_vec())?;
 
-        Ok(Self { address, payload })
+        Ok(Self { destination, payload })
     }
 }
 

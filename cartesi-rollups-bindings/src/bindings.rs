@@ -54,7 +54,7 @@ pub struct rollup_inspect_state {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rollup_voucher {
-    pub address: rollup_address,
+    pub destination: rollup_address,
     pub payload: rollup_bytes,
     pub index: u64,
 }
@@ -147,12 +147,12 @@ pub fn rollup_read_inspect_state_request(
 
 pub fn rollup_write_voucher(
     fd: c_int,
-    address: rollup_address,
+    destination: rollup_address,
     payload: &mut Box<rollup_bytes>,
 ) -> Result<u64, Box<dyn Error>> {
     unsafe {
         let mut data = rollup_voucher {
-            address,
+            destination,
             payload: *payload.as_mut(),
             index: 0,
         };
